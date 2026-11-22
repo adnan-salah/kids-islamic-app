@@ -4,7 +4,7 @@
             plus a Parent area behind a hold-and-sum lock.
    ========================================================= */
 import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
-import { GAMES } from './games/index.js';
+import { GAMES, SUBJECTS } from './games/index.js';
 
 const app = document.getElementById('app');
 let state = loadState();
@@ -62,20 +62,25 @@ function showWho() {
 /* ---------- Screen 2: My games ---------- */
 function showGames(childId) {
   const child = findChild(childId);
-  const games = GAMES.filter(g => g.bands.includes(child.band));
   app.replaceChildren(
     el('div', { class: 'topbar' },
       el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: showWho }, '🏠'),
       el('h1', { class: 'with-avatar' }, avatarEl(child, 'avatar-small'), child.name),
       el('button', { class: 'star-count', onclick: () => showStickers(childId) }, `⭐ ${child.stars}  📒`),
     ),
-    el('div', { class: 'tile-grid' }, games.map(game =>
-      el('button', { class: 'tile', onclick: () => { sfx.tap(); playGame(childId, game.id); } },
-        el('span', { class: 'emoji' }, game.emoji),
-        el('span', { class: 'label' }, game.title),
-        el('span', { class: 'sub' }, starsFor(child, game.id)),
-      ),
-    )),
+    ...SUBJECTS.map(subject => {
+      const games = subject.games.filter(g => g.bands.includes(child.band));
+      if (!games.length) return null;
+      return el('section', { class: 'subject' },
+        el('h2', { class: 'subject-title' }, `${subject.emoji} ${subject.name}`),
+        el('div', { class: 'tile-grid' }, games.map(game =>
+          el('button', { class: 'tile', onclick: () => { sfx.tap(); playGame(childId, game.id); } },
+            el('span', { class: 'emoji' }, game.emoji),
+            el('span', { class: 'label' }, game.title),
+            el('span', { class: 'sub' }, starsFor(child, game.id)),
+          ),
+        )));
+    }).filter(Boolean),
   );
   speak('Assalamu alaikum! Pick a game.');
 }
