@@ -24,6 +24,8 @@ import world from './world.js';
 import clock from './clock.js';
 import memory from './memory.js';
 import house from './house.js';
+import balloons from './balloons.js';
+import catchGame from './catch.js';
 
 // The My games screen shows one section per subject, in this order.
 export const SUBJECTS = [
@@ -32,7 +34,7 @@ export const SUBJECTS = [
   { id: 'world', name: 'Science & the world', emoji: '🌏', games: [world] },
   { id: 'life', name: 'Life skills', emoji: '🏡', games: [house, manners] },
   { id: 'islam', name: 'Islam', emoji: '🕌', games: [quran, wudu, duas, pillars, stories, letters] },
-  { id: 'fun', name: 'Puzzles', emoji: '🧩', games: [jigsaw, memory] },
+  { id: 'fun', name: 'Puzzles & action', emoji: '🧩', games: [balloons, catchGame, jigsaw, memory] },
 ];
 
 export const GAMES = SUBJECTS.flatMap(s => s.games);

@@ -1,10 +1,12 @@
 /* =========================================================
    app.js: screens and navigation.
-   Screens: Who's playing -> My games -> Game -> Well done
-            plus a Parent area behind a hold-and-sum lock.
+   Screens: Who's playing -> Subjects -> Games in a subject -> Game -> Well done
+            plus the sticker book, the treasure chest, and a Parent area
+            behind a hold-and-PIN lock.
    ========================================================= */
 import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
+import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
 
 const app = document.getElementById('app');
 let state = loadState();
@@ -42,47 +44,91 @@ const STICKERS = ['🕌', '🌙', '🌴', '🐪', '🏮', '🕋', '📖', '🌸'
 const STARS_PER_STICKER = 10;
 const stickersFor = stars => Math.min(STICKERS.length, Math.floor(stars / STARS_PER_STICKER));
 
+/* Each screen sets a background picture (img/art/bg-*.jpg) via CSS. */
+const setBg = name => { document.body.dataset.bg = name; };
+
+/* Pop tiles in one after another. */
+const stagger = (nodes, step = 60) => nodes.forEach((n, i) => { n.style.animationDelay = `${i * step}ms`; });
+
 /* ---------- Screen 1: Who's playing? ---------- */
 function showWho() {
+  setBg('home');
+  const tiles = state.children.map(child =>
+    el('button', { class: 'tile pop-in', onclick: () => { sfx.tap(); showGames(child.id); } },
+      avatarEl(child),
+      el('span', { class: 'label' }, child.name),
+      el('span', { class: 'sub' }, `⭐ ${child.stars}`, streakOf(child) > 1 ? `   🔥 ${streakOf(child)}` : ''),
+    ));
+  stagger(tiles);
   app.replaceChildren(
     el('div', { class: 'topbar' },
-      el('h1', {}, 'Assalamu alaikum! Who’s playing?'),
+      el('h1', {}, 'Who’s playing?'),
       parentButton(),
     ),
-    el('div', { class: 'tile-grid' }, state.children.map(child =>
-      el('button', { class: 'tile', onclick: () => { sfx.tap(); showGames(child.id); } },
-        avatarEl(child),
-        el('span', { class: 'label' }, child.name),
-        el('span', { class: 'sub' }, `⭐ ${child.stars}`),
-      ),
-    )),
+    kasemSays('hi', 'Hi! I’m Kasem the Koala. Who’s playing today?', 'hero'),
+    el('div', { class: 'tile-grid' }, tiles),
   );
 }
 
-/* ---------- Screen 2: My games ---------- */
+/* The top bar on a child's screens: back, name, streak, treasure progress, stars. */
+function childBar(child, onBack, backIcon = '🏠') {
+  const streak = streakOf(child);
+  const n = Math.min(gamesToday(child), GAMES_FOR_CHEST);
+  const chest = chestReady(child)
+    ? el('button', { class: 'chip chest-chip ready', onclick: () => showChest(child.id) }, '🎁 Open!')
+    : el('span', { class: 'chip', title: 'Treasure chest' }, chestOpenedToday(child) ? '🎁 ✓' : `🎁 ${n}/${GAMES_FOR_CHEST}`);
+  return el('div', { class: 'topbar' },
+    el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: onBack }, backIcon),
+    el('h1', { class: 'with-avatar' }, avatarEl(child, 'avatar-small'), child.name),
+    streak > 1 ? el('span', { class: 'chip streak' }, `🔥 ${streak} days`) : null,
+    chest,
+    el('button', { class: 'star-count', onclick: () => showStickers(child.id) }, `⭐ ${child.stars}  📒`),
+  );
+}
+
+/* ---------- Screen 2: pick a subject ---------- */
 function showGames(childId) {
   const child = findChild(childId);
+  setBg('home');
+  const subjects = SUBJECTS.filter(s => s.games.some(g => g.bands.includes(child.band)));
+  const cards = subjects.map(subject => {
+    const games = subject.games.filter(g => g.bands.includes(child.band));
+    const fresh = games.filter(g => !child.played[g.id]).length;
+    return el('button', { class: `subject-card pop-in s-${subject.id}`, onclick: () => { sfx.tap(); showSubject(childId, subject.id); } },
+      el('span', { class: 'subject-pic', style: `background-image:url(img/art/bg-${subject.id}.jpg)` }),
+      el('span', { class: 'subject-emoji' }, subject.emoji),
+      el('span', { class: 'label' }, subject.name),
+      el('span', { class: 'sub' }, `${games.length} game${games.length > 1 ? 's' : ''}`),
+      fresh ? el('span', { class: 'badge-new' }, `${fresh} new`) : null);
+  });
+  stagger(cards, 70);
   app.replaceChildren(
-    el('div', { class: 'topbar' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: showWho }, '🏠'),
-      el('h1', { class: 'with-avatar' }, avatarEl(child, 'avatar-small'), child.name),
-      el('button', { class: 'star-count', onclick: () => showStickers(childId) }, `⭐ ${child.stars}  📒`),
-    ),
-    ...SUBJECTS.map(subject => {
-      const games = subject.games.filter(g => g.bands.includes(child.band));
-      if (!games.length) return null;
-      return el('section', { class: 'subject' },
-        el('h2', { class: 'subject-title' }, `${subject.emoji} ${subject.name}`),
-        el('div', { class: 'tile-grid' }, games.map(game =>
-          el('button', { class: 'tile', onclick: () => { sfx.tap(); playGame(childId, game.id); } },
-            el('span', { class: 'emoji' }, game.emoji),
-            el('span', { class: 'label' }, game.title),
-            el('span', { class: 'sub' }, starsFor(child, game.id)),
-          ),
-        )));
-    }).filter(Boolean),
+    childBar(child, showWho),
+    kasemSays('hi', `Hi ${child.name}! What shall we learn?`),
+    el('div', { class: 'subject-grid' }, cards),
   );
-  speak('Assalamu alaikum! Pick a game.');
+  speak('Pick a subject!');
+}
+
+/* ---------- Screen 2b: the games in one subject ---------- */
+function showSubject(childId, subjectId) {
+  const child = findChild(childId);
+  const subject = SUBJECTS.find(s => s.id === subjectId);
+  setBg(subject.id);
+  const games = subject.games.filter(g => g.bands.includes(child.band));
+  const tiles = games.map(game =>
+    el('button', { class: `tile pop-in ${child.played[game.id] ? '' : 'is-new'}`, onclick: () => { sfx.tap(); playGame(childId, game.id); } },
+      el('span', { class: 'emoji' }, game.emoji),
+      el('span', { class: 'label' }, game.title),
+      el('span', { class: 'sub' }, starsFor(child, game.id)),
+    ));
+  stagger(tiles);
+  app.replaceChildren(
+    childBar(child, () => showGames(childId), '⬅️'),
+    el('h2', { class: 'subject-heading' }, `${subject.emoji} ${subject.name}`),
+    el('div', { class: 'tile-grid' }, tiles),
+  );
+  speak('Pick a game.');
 }
 
 function starsFor(child, gameId) {
@@ -93,37 +139,85 @@ function starsFor(child, gameId) {
 /* ---------- Sticker book ---------- */
 function showStickers(childId) {
   const child = findChild(childId);
+  setBg('home');
   const have = stickersFor(child.stars);
   const toNext = STARS_PER_STICKER - (child.stars % STARS_PER_STICKER);
   const text = have >= STICKERS.length
-    ? 'MashaAllah! You collected every sticker!'
+    ? 'You collected every sticker!'
     : `You have ${have} stickers. ${toNext} more stars for the next one!`;
+  const found = child.treasures || [];
   app.replaceChildren(
     el('div', { class: 'topbar' },
       el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => showGames(childId) }, '⬅️'),
       el('h1', {}, `${child.name}’s sticker book`),
     ),
-    el('p', { style: 'font-size:1.6rem;margin:0' }, text),
-    el('div', { class: 'sticker-grid' }, STICKERS.map((s, i) =>
-      el('div', { class: `sticker ${i < have ? '' : 'locked'}` }, i < have ? s : '❔'))),
+    el('div', { class: 'book' },
+      el('p', { class: 'book-line' }, text),
+      el('div', { class: 'sticker-grid' }, STICKERS.map((s, i) =>
+        el('div', { class: `sticker ${i < have ? '' : 'locked'}` }, i < have ? s : '❔'))),
+      el('h2', { class: 'book-title' }, `🎁 Treasures found: ${found.length} of ${TREASURES.length}`),
+      el('p', { class: 'book-line small' }, 'Play 3 games in a day to open the treasure chest.'),
+      el('div', { class: 'sticker-grid small' }, TREASURES.map(t =>
+        el('div', { class: `sticker ${found.includes(t) ? '' : 'locked'}` }, found.includes(t) ? t : '❔')))),
   );
   speak('Here is your sticker book!');
 }
 
+/* ---------- Treasure chest ---------- */
+function showChest(childId) {
+  const child = findChild(childId);
+  if (!chestReady(child)) return showGames(childId);
+  setBg('home');
+  const chest = el('button', { class: 'chest-btn wobble', 'aria-label': 'Open the treasure chest' },
+    el('img', { src: 'img/art/chest.png', alt: '' }));
+  const msg = el('p', { class: 'chest-msg' }, 'Tap the treasure chest to open it!');
+  chest.addEventListener('click', () => {
+    if (chest.disabled) return;
+    chest.disabled = true;
+    const found = openChest(child);
+    saveState(state);
+    sfx.chest();
+    chest.classList.remove('wobble');
+    chest.classList.add('opened');
+    const r = chest.getBoundingClientRect();
+    confetti({ from: { x: r.left + r.width / 2, y: r.top + r.height / 3 }, count: 200 });
+    chest.replaceChildren(el('span', { class: 'treasure' }, found));
+    msg.textContent = `You found a treasure! Plus ${CHEST_STARS} bonus stars!`;
+    speak(['You found a treasure!', `Plus ${CHEST_STARS} bonus stars!`]);
+    app.querySelector('.after-chest').hidden = false;
+  });
+  app.replaceChildren(
+    el('div', { class: 'done-screen' },
+      el('h2', {}, 'Treasure time!'),
+      el('div', { class: 'chest-row' }, kasem('cheer', 'bob big-kasem'), chest),
+      msg,
+      el('div', { class: 'row after-chest', hidden: true },
+        el('button', { class: 'big-btn', onclick: () => showGames(childId) }, 'More games'),
+        el('button', { class: 'big-btn secondary', onclick: () => showStickers(childId) }, '📒 Sticker book'))));
+  speak('Tap the treasure chest to open it!');
+}
+
 /* ---------- Screen 3: a game ---------- */
+function subjectOf(gameId) {
+  return SUBJECTS.find(s => s.games.some(g => g.id === gameId));
+}
+
 function playGame(childId, gameId) {
   const child = findChild(childId);
   const game = GAMES.find(g => g.id === gameId);
-  const root = el('div', { style: 'display:flex;flex-direction:column;gap:1.25rem;flex:1' });
+  const subject = subjectOf(gameId);
+  setBg(subject.id);
+  const root = el('div', { class: 'stage' });
   let finished = false;
 
-  app.replaceChildren(
+  app.replaceChildren(...[
     el('div', { class: 'topbar' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; stopSpeech(); showGames(childId); } }, '🏠'),
-      el('h1', {}, `${game.emoji} ${game.title}`),
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; stopSpeech(); showSubject(childId, subject.id); } }, '⬅️'),
+      el('h1', { class: 'game-title' }, `${game.emoji} ${game.title}`),
     ),
     root,
-  );
+    game.noBuddy ? null : buddy(),
+  ].filter(Boolean));
 
   game.start({
     root,
@@ -140,6 +234,7 @@ function playGame(childId, gameId) {
       rec.best = Math.max(rec.best, stars);
       rec.times += 1;
       child.played[gameId] = rec;
+      recordPlay(child);
       saveState(state);
       showDone(childId, gameId, stars, message, newSticker);
     },
@@ -149,20 +244,32 @@ function playGame(childId, gameId) {
 /* ---------- Screen 4: Well done! ---------- */
 function showDone(childId, gameId, stars, message, newSticker) {
   const child = findChild(childId);
-  const praise = pick(['MashaAllah!', 'Alhamdulillah!', 'Well done!']);
+  const subject = subjectOf(gameId);
+  const praise = pick(['Well done!', 'Great job!', 'Amazing!', 'MashaAllah!']);
+  const ready = chestReady(child);
   sfx.win();
-  speak([praise, message, `You got ${stars} stars.`, newSticker ? 'You unlocked a new sticker!' : null]);
+  setTimeout(() => confetti(), 150);
+  speak([praise, message, `You got ${stars} stars.`,
+    newSticker ? 'You unlocked a new sticker!' : null,
+    ready ? 'The treasure chest is ready! Tap it to open.' : null]);
+  const left = GAMES_FOR_CHEST - gamesToday(child);
   app.replaceChildren(
     el('div', { class: 'done-screen' },
+      kasem('cheer', 'big-kasem jump-in'),
       el('h2', {}, praise),
       el('div', { class: 'stars' }, [1, 2, 3].map(n =>
-        el('span', { class: n <= stars ? '' : 'dim', style: `animation-delay:${n * 0.25}s` }, '⭐'))),
-      el('p', { style: 'font-size:1.8rem;margin:0' }, message),
-      newSticker ? el('p', { style: 'font-size:1.8rem;margin:0' }, `New sticker: ${newSticker}`) : null,
-      el('p', { class: 'note', style: 'font-size:1.4rem' }, `${child.name} has ${child.stars} stars altogether.`),
+        el('span', { class: n <= stars ? '' : 'dim', style: `animation-delay:${0.3 + n * 0.25}s` }, '⭐'))),
+      el('p', { class: 'done-msg' }, message),
+      newSticker ? el('p', { class: 'done-msg' }, `New sticker: ${newSticker}`) : null,
+      ready
+        ? el('button', { class: 'chest-btn small wobble', 'aria-label': 'Open the treasure chest', onclick: () => showChest(childId) },
+          el('img', { src: 'img/art/chest.png', alt: '' }), el('span', {}, 'Open the treasure chest!'))
+        : left > 0 && !chestOpenedToday(child)
+          ? el('p', { class: 'note big-note' }, `🎁 ${left} more game${left > 1 ? 's' : ''} today to open the treasure chest!`)
+          : null,
       el('div', { class: 'row' },
-        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, 'Play again'),
-        el('button', { class: 'big-btn secondary', onclick: () => showGames(childId) }, 'More games'),
+        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, '🔁 Play again'),
+        el('button', { class: 'big-btn secondary', onclick: () => showSubject(childId, subject.id) }, 'More games'),
       ),
     ),
   );
@@ -188,6 +295,7 @@ function showGate() {
 }
 
 function showParent() {
+  setBg('none');
   app.replaceChildren(
     el('div', { class: 'topbar' },
       el('button', { class: 'icon-btn', 'aria-label': 'Done', onclick: () => { saveState(state); showWho(); } }, '✅'),

@@ -153,11 +153,34 @@ function tone(freq, start, length, type = 'sine', volume = 0.18) {
   osc.stop(t + length);
 }
 
+/* "right" and "try again" also tell Kasem (the corner buddy) to react. */
+const mood = m => document.dispatchEvent(new CustomEvent('kasem', { detail: m }));
+
+/* A quick upward or downward slide in pitch (for pops and whooshes). */
+function slide(from, to, length, type = 'sine', volume = 0.15) {
+  audioCtx ??= new (window.AudioContext || window.webkitAudioContext)();
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(from, t);
+  osc.frequency.exponentialRampToValueAtTime(to, t + length);
+  gain.gain.setValueAtTime(volume, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + length);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + length);
+}
+
 export const sfx = {
   tap()     { tone(660, 0, 0.12, 'triangle', 0.1); },
-  right()   { tone(784, 0, 0.18); tone(1047, 0.12, 0.3); },
-  tryAgain(){ tone(330, 0, 0.2, 'triangle', 0.12); tone(294, 0.15, 0.25, 'triangle', 0.12); },
+  right()   { tone(784, 0, 0.18); tone(1047, 0.12, 0.3); mood('right'); },
+  tryAgain(){ tone(330, 0, 0.2, 'triangle', 0.12); tone(294, 0.15, 0.25, 'triangle', 0.12); mood('wrong'); },
   win()     { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.4)); },
+  pop()     { slide(900, 1800, 0.08, 'square', 0.06); tone(1400, 0.03, 0.12, 'sine', 0.08); },
+  whoosh()  { slide(300, 1200, 0.35, 'sawtooth', 0.04); },
+  chest()   { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, i * 0.09, 0.5, 'triangle', 0.12)); },
+  boing()   { slide(220, 520, 0.18, 'triangle', 0.12); },
 };
 
 /* ---------- DOM helpers ---------- */

@@ -144,7 +144,7 @@ export default {
     /* ---------- Race ---------- */
     function race() {
       let me = 0, rival = 0, mistakes = 0, rivalWon = false;
-      const myCar = el('span', { class: 'car me' }, '🏎️');
+      const myCar = el('img', { class: 'car me kasem-car', src: 'img/art/kasem-car.png', alt: 'Kasem’s car' });
       const rivalCar = el('span', { class: 'car rival' }, '🚙');
       const track = el('div', { class: 'track' },
         el('div', { class: 'lane' }, myCar, el('span', { class: 'flag' }, '🏁')),
@@ -166,6 +166,7 @@ export default {
       function next() {
         ask(area, make(), () => {
           sfx.right();
+          sfx.whoosh();
           me++;
           place();
           if (me >= RACE_STEPS) {
