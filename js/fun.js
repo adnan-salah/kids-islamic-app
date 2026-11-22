@@ -9,7 +9,7 @@
 import { el, pick } from './core.js';
 
 /* ---------- Kasem ---------- */
-export const POSES = ['hi', 'cheer', 'think', 'oops', 'ball', 'read', 'car'];
+export const POSES = ['hi', 'cheer', 'think', 'oops', 'ball', 'read', 'car', 'globe', 'trophy'];
 
 /** An <img> of Kasem. pose: one of POSES. Falls back to the standing picture. */
 export function kasem(pose = 'hi', cls = '') {

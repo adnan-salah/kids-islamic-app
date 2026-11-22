@@ -26,12 +26,16 @@ import memory from './memory.js';
 import house from './house.js';
 import balloons from './balloons.js';
 import catchGame from './catch.js';
+import globe from './globe-game.js';
+import flags from './flags.js';
+import worldQuiz from './world-quiz.js';
 
 // The My games screen shows one section per subject, in this order.
 export const SUBJECTS = [
   { id: 'english', name: 'English', emoji: '📚', games: [sounds, words] },
   { id: 'maths', name: 'Maths', emoji: '🔢', games: [maths, sports, clock] },
-  { id: 'world', name: 'Science & the world', emoji: '🌏', games: [world] },
+  { id: 'geo', name: 'Geography', emoji: '🌍', games: [globe, flags, worldQuiz] },
+  { id: 'world', name: 'Science & nature', emoji: '🔬', games: [world] },
   { id: 'life', name: 'Life skills', emoji: '🏡', games: [house, manners] },
   { id: 'islam', name: 'Islam', emoji: '🕌', games: [quran, wudu, duas, pillars, stories, letters] },
   { id: 'fun', name: 'Puzzles & action', emoji: '🧩', games: [balloons, catchGame, jigsaw, memory] },

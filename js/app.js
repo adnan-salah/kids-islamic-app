@@ -1,15 +1,28 @@
 /* =========================================================
    app.js: screens and navigation.
    Screens: Who's playing -> Subjects -> Games in a subject -> Game -> Well done
-            plus the sticker book, the treasure chest, and a Parent area
+            plus My levels (levels, tiers, real rewards), the treasure chest, and a Parent area
             behind a hold-and-PIN lock.
    ========================================================= */
 import { BANDS, loadState, saveState, resetState, speak, stopSpeech, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
 import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
+import { levelOf, levelProgress, tierOf, tierInfo, titleFor, subjectLevel, starsIn, checkLevels, pendingRewards, rewardFor, DEFAULT_REWARDS, LEVELS_PER_TIER, starsForLevel } from './levels.js';
 
 const app = document.getElementById('app');
 let state = loadState();
+migrate();
+
+/* Older saves: work out level totals and tiers without giving
+   rewards for stars earned before levels existed. */
+function migrate() {
+  for (const c of state.children) {
+    for (const rec of Object.values(c.played || {})) rec.total ??= rec.best * rec.times;
+    c.tierSeen ??= tierOf(levelOf(c.stars));
+    c.rewardsEarned ??= [];
+  }
+  saveState(state);
+}
 
 const AVATARS = ['🌙', '⭐', '🌸', '🐣', '🦋', '🐢', '🦁', '🐪', '🌻', '🚀', '🐱', '🌈'];
 
@@ -39,10 +52,6 @@ function photoToDataUrl(file, size = 320) {
   });
 }
 
-/* Sticker book: one new sticker for every 10 stars. */
-const STICKERS = ['🕌', '🌙', '🌴', '🐪', '🏮', '🕋', '📖', '🌸', '🦋', '🌈', '🐎', '🌟'];
-const STARS_PER_STICKER = 10;
-const stickersFor = stars => Math.min(STICKERS.length, Math.floor(stars / STARS_PER_STICKER));
 
 /* Each screen sets a background picture (img/art/bg-*.jpg) via CSS. */
 const setBg = name => { document.body.dataset.bg = name; };
@@ -57,7 +66,8 @@ function showWho() {
     el('button', { class: 'tile pop-in', onclick: () => { sfx.tap(); showGames(child.id); } },
       avatarEl(child),
       el('span', { class: 'label' }, child.name),
-      el('span', { class: 'sub' }, `⭐ ${child.stars}`, streakOf(child) > 1 ? `   🔥 ${streakOf(child)}` : ''),
+      el('span', { class: 'sub' }, `${tierInfo(tierOf(levelOf(child.stars))).icon} Level ${levelOf(child.stars)}`, streakOf(child) > 1 ? `   🔥 ${streakOf(child)}` : ''),
+      pendingRewards(child).length ? el('span', { class: 'badge-new' }, '🎁 Reward!') : null,
     ));
   stagger(tiles);
   app.replaceChildren(
@@ -82,7 +92,8 @@ function childBar(child, onBack, backIcon = '🏠') {
     el('h1', { class: 'with-avatar' }, avatarEl(child, 'avatar-small'), child.name),
     streak > 1 ? el('span', { class: 'chip streak' }, `🔥 ${streak} days`) : null,
     chest,
-    el('button', { class: 'star-count', onclick: () => showStickers(child.id) }, `⭐ ${child.stars}  📒`),
+    pendingRewards(child).length ? el('button', { class: 'chip reward-chip', onclick: () => showReward(child.id) }, '🎁 Reward!') : null,
+    levelChip(child),
   );
 }
 
@@ -136,31 +147,105 @@ function starsFor(child, gameId) {
   return best ? '⭐'.repeat(best) : 'New!';
 }
 
-/* ---------- Sticker book ---------- */
-function showStickers(childId) {
+/* The level chip in the top bar: a mini progress bar. Tap for My levels. */
+function levelChip(child) {
+  const { level, frac } = levelProgress(child.stars);
+  const tier = tierInfo(tierOf(level));
+  return el('button', { class: 'level-chip', onclick: () => showLevels(child.id), 'aria-label': `Level ${level}. My levels` },
+    el('span', { class: 'level-badge', style: `--tc:${tier.colour}` }, String(level)),
+    el('span', { class: 'level-mini' }, el('span', { style: `width:${Math.round(frac * 100)}%` })),
+    el('span', { class: 'level-stars' }, `⭐ ${child.stars}`));
+}
+
+/* A progress bar. */
+const bar = (frac, cls = '') => el('div', { class: `bar ${cls}` }, el('span', { style: `width:${Math.max(3, Math.round(frac * 100))}%` }));
+
+/* ---------- My levels ----------
+   Replaces the sticker book: overall level, the tier path with its real
+   rewards, a knowledge level for every subject, and treasures. */
+function showLevels(childId) {
   const child = findChild(childId);
   setBg('home');
-  const have = stickersFor(child.stars);
-  const toNext = STARS_PER_STICKER - (child.stars % STARS_PER_STICKER);
-  const text = have >= STICKERS.length
-    ? 'You collected every sticker!'
-    : `You have ${have} stickers. ${toNext} more stars for the next one!`;
+  const { level, frac, toNext } = levelProgress(child.stars);
+  const tier = tierOf(level);
+  const nextTierLevel = (tier + 1) * LEVELS_PER_TIER;
+  const subjects = SUBJECTS.filter(s => s.games.some(g => g.bands.includes(child.band)));
+  const path = [];
+  for (let t = 1; t <= Math.max(6, tier + 2); t++) {
+    const info = tierInfo(t), got = t <= tier;
+    const r = (child.rewardsEarned || []).find(x => x.tier === t);
+    path.push(el('div', { class: `tier-step ${got ? 'got' : ''}`, style: `--tc:${info.colour}` },
+      el('span', { class: 'tier-icon' }, got ? info.icon : '🔒'),
+      el('strong', {}, info.name),
+      el('span', { class: 'sub' }, `Level ${t * LEVELS_PER_TIER}`),
+      el('span', { class: 'tier-reward' }, r?.given ? '✅ Reward given' : got ? '🎁 Show Mum or Dad!' : `🎁 ${rewardFor(state, t)}`)));
+  }
   const found = child.treasures || [];
   app.replaceChildren(
     el('div', { class: 'topbar' },
       el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => showGames(childId) }, '⬅️'),
-      el('h1', {}, `${child.name}’s sticker book`),
+      el('h1', {}, `${child.name}’s levels`),
     ),
-    el('div', { class: 'book' },
-      el('p', { class: 'book-line' }, text),
-      el('div', { class: 'sticker-grid' }, STICKERS.map((s, i) =>
-        el('div', { class: `sticker ${i < have ? '' : 'locked'}` }, i < have ? s : '❔'))),
+    el('div', { class: 'book levels' },
+      el('div', { class: 'level-hero' },
+        el('div', { class: 'level-big', style: `--tc:${tierInfo(tier).colour}` },
+          el('span', { class: 'n' }, String(level)), el('span', { class: 'l' }, 'LEVEL')),
+        el('div', { class: 'level-text' },
+          el('h2', {}, `${tierInfo(tier).icon} ${titleFor(level)}`),
+          bar(frac, 'big'),
+          el('p', {}, `⭐ ${toNext} more stars to reach level ${level + 1}.`),
+          el('p', { class: 'sub' }, `Reach level ${nextTierLevel} for a real reward: ${rewardFor(state, tier + 1)}`))),
+      el('h2', { class: 'book-title' }, '🏆 Reward path'),
+      el('div', { class: 'tier-path' }, path),
+      el('h2', { class: 'book-title' }, '🧠 What I know'),
+      el('div', { class: 'subject-levels' }, subjects.map(sub => {
+        const st = starsIn(child, sub.games);
+        const sl = subjectLevel(st);
+        return el('div', { class: 'subject-level' },
+          el('span', { class: 'emoji' }, sub.emoji),
+          el('div', {}, el('strong', {}, `${sub.name}: ${sl.icon} ${sl.name}`), bar(sl.frac),
+            el('span', { class: 'sub' }, sl.toNext ? `${sl.toNext} stars to the next level` : 'Top level!')));
+      })),
+      el('p', { class: 'book-line small' }, `🌍 Countries found on the globe: ${(child.found || []).length}`),
       el('h2', { class: 'book-title' }, `🎁 Treasures found: ${found.length} of ${TREASURES.length}`),
       el('p', { class: 'book-line small' }, 'Play 3 games in a day to open the treasure chest.'),
       el('div', { class: 'sticker-grid small' }, TREASURES.map(t =>
         el('div', { class: `sticker ${found.includes(t) ? '' : 'locked'}` }, found.includes(t) ? t : '❔')))),
   );
-  speak('Here is your sticker book!');
+  speak([`You are on level ${level}!`, `${toNext} more stars to the next level.`]);
+}
+
+/* ---------- Real-life reward ----------
+   The child shows this to a grown-up, who gives the reward and
+   marks it as given (behind the PIN). */
+function showReward(childId) {
+  const child = findChild(childId);
+  const r = pendingRewards(child)[0];
+  if (!r) return showGames(childId);
+  setBg('home');
+  const info = tierInfo(r.tier);
+  setTimeout(() => confetti({ count: 200 }), 200);
+  sfx.win();
+  app.replaceChildren(
+    el('div', { class: 'done-screen reward-screen' },
+      el('img', { class: 'big-kasem jump-in', src: 'img/art/kasem-trophy.png', alt: '' }),
+      el('h2', {}, `${info.icon} ${info.name} reward!`),
+      el('p', { class: 'done-msg' }, `${child.name} reached level ${r.tier * LEVELS_PER_TIER}!`),
+      el('div', { class: 'reward-card', style: `--tc:${info.colour}` },
+        el('span', { class: 'sub' }, 'Your real reward:'),
+        el('strong', {}, rewardFor(state, r.tier))),
+      el('p', { class: 'big-note' }, '👋 Show this to Mum or Dad!'),
+      el('div', { class: 'row' },
+        el('button', { class: 'big-btn', onclick: () => askGrownUp('Grown-up: did you give the reward?').then(ok => {
+          if (!ok) return showReward(childId);
+          r.given = true;
+          r.givenDate = new Date().toLocaleDateString('en-CA');
+          saveState(state);
+          toast('Reward given ✅', 2000);
+          pendingRewards(child).length ? showReward(childId) : showGames(childId);
+        }) }, '✅ Grown-up: reward given'),
+        el('button', { class: 'big-btn secondary', onclick: () => showGames(childId) }, 'Later'))));
+  speak([`Amazing! You reached the ${info.name} level!`, 'You earned a real reward!', 'Show this to Mum or Dad!']);
 }
 
 /* ---------- Treasure chest ---------- */
@@ -174,8 +259,11 @@ function showChest(childId) {
   chest.addEventListener('click', () => {
     if (chest.disabled) return;
     chest.disabled = true;
+    const before = child.stars;
     const found = openChest(child);
+    const lv = checkLevels(child, before);
     saveState(state);
+    if (lv.newTier) setTimeout(() => showReward(childId), 3500);
     sfx.chest();
     chest.classList.remove('wobble');
     chest.classList.add('opened');
@@ -193,7 +281,7 @@ function showChest(childId) {
       msg,
       el('div', { class: 'row after-chest', hidden: true },
         el('button', { class: 'big-btn', onclick: () => showGames(childId) }, 'More games'),
-        el('button', { class: 'big-btn secondary', onclick: () => showStickers(childId) }, '📒 Sticker book'))));
+        el('button', { class: 'big-btn secondary', onclick: () => showLevels(childId) }, '🏆 My levels'))));
   speak('Tap the treasure chest to open it!');
 }
 
@@ -229,16 +317,17 @@ function playGame(childId, gameId) {
       if (finished) return; // child left the game early
       finished = true;
       // Save progress: add the stars, remember the best score for this game.
-      const before = stickersFor(child.stars);
+      const before = child.stars;
       child.stars += stars;
-      const newSticker = stickersFor(child.stars) > before ? STICKERS[stickersFor(child.stars) - 1] : null;
-      const rec = child.played[gameId] || { best: 0, times: 0 };
+      const rec = child.played[gameId] || { best: 0, times: 0, total: 0 };
       rec.best = Math.max(rec.best, stars);
       rec.times += 1;
+      rec.total = (rec.total || 0) + stars;
+      const lv = checkLevels(child, before);
       child.played[gameId] = rec;
       recordPlay(child);
       saveState(state);
-      showDone(childId, gameId, stars, message, newSticker);
+      showDone(childId, gameId, stars, message, lv, before);
     },
   });
 }
@@ -252,7 +341,7 @@ function mathsBand(child, subject) {
 }
 
 /* ---------- Screen 4: Well done! ---------- */
-function showDone(childId, gameId, stars, message, newSticker) {
+function showDone(childId, gameId, stars, message, lv = {}, before = 0) {
   const child = findChild(childId);
   const subject = subjectOf(gameId);
   const praise = pick(subject.id === 'islam' ? ['MashaAllah!', 'Well done!', 'Great job!'] : ['Well done!', 'Great job!', 'Amazing!']);
@@ -260,8 +349,14 @@ function showDone(childId, gameId, stars, message, newSticker) {
   sfx.win();
   setTimeout(() => confetti(), 150);
   speak([praise, message, `You got ${stars} stars.`,
-    newSticker ? 'You unlocked a new sticker!' : null,
+    lv.levelUp ? `Level up! You are now on level ${lv.levelUp}!` : null,
+    lv.newTier ? 'You earned a real reward!' : null,
     ready ? 'The treasure chest is ready! Tap it to open.' : null]);
+  // Level bar fills from where it was to where it is now.
+  const p0 = levelProgress(before), p1 = levelProgress(child.stars);
+  const fill = el('span', { style: `width:${Math.round((lv.levelUp ? 0 : p0.frac) * 100)}%` });
+  setTimeout(() => { fill.style.width = `${Math.max(3, Math.round(p1.frac * 100))}%`; }, 900);
+  if (lv.levelUp) setTimeout(() => { sfx.chest(); confetti({ count: 160 }); }, 1600);
   const left = GAMES_FOR_CHEST - gamesToday(child);
   app.replaceChildren(
     el('div', { class: 'done-screen' },
@@ -270,7 +365,11 @@ function showDone(childId, gameId, stars, message, newSticker) {
       el('div', { class: 'stars' }, [1, 2, 3].map(n =>
         el('span', { class: n <= stars ? '' : 'dim', style: `animation-delay:${0.3 + n * 0.25}s` }, '⭐'))),
       el('p', { class: 'done-msg' }, message),
-      newSticker ? el('p', { class: 'done-msg' }, `New sticker: ${newSticker}`) : null,
+      el('div', { class: `done-level ${lv.levelUp ? 'up' : ''}` },
+        el('span', { class: 'level-badge', style: `--tc:${tierInfo(tierOf(p1.level)).colour}` }, String(p1.level)),
+        el('div', { class: 'bar big' }, fill),
+        lv.levelUp ? el('strong', { class: 'level-up' }, '⬆️ LEVEL UP!') : el('span', { class: 'sub' }, `${p1.toNext} ⭐ to level ${p1.level + 1}`)),
+      lv.newTier ? el('button', { class: 'big-btn reward-btn', onclick: () => showReward(childId) }, `🎁 You earned a real reward! Tap here`) : null,
       ready
         ? el('button', { class: 'chest-btn small wobble', 'aria-label': 'Open the treasure chest', onclick: () => showChest(childId) },
           el('img', { src: 'img/art/chest.png', alt: '' }), el('span', {}, 'Open the treasure chest!'))
@@ -352,8 +451,9 @@ function showParent() {
         }));
       maths.addEventListener('change', () => { child.maths = maths.value || undefined; saveState(state); });
       return el('div', { class: 'parent-row' },
-        avatarBtn, file, name, band, maths, emojiBtn, el('span', { class: 'note' }, `⭐ ${child.stars}`));
+        avatarBtn, file, name, band, maths, emojiBtn, el('span', { class: 'note' }, `⭐ ${child.stars} · Level ${levelOf(child.stars)}`));
     })),
+    rewardsPanel(),
     pinPanel(),
     voicePanel(),
     el('div', {},
@@ -361,6 +461,28 @@ function showParent() {
         if (confirmReset()) { resetState(); state = loadState(); showParent(); }
       } }, 'Reset all progress')),
   );
+}
+
+/* Real-life rewards: what each tier earns, and who is waiting for theirs. */
+function rewardsPanel() {
+  state.rewards ??= [];
+  const rows = DEFAULT_REWARDS.map((_, i) => {
+    const t = i + 1, info = tierInfo(t);
+    const input = el('input', { value: rewardFor(state, t), maxlength: 60, 'aria-label': `${info.name} reward`, style: 'flex:1;min-width:12rem' });
+    input.addEventListener('input', () => { state.rewards[i] = input.value.trim(); saveState(state); });
+    return el('label', { class: 'reward-row' }, el('span', {}, `${info.icon} ${info.name} (level ${t * LEVELS_PER_TIER})`), input);
+  });
+  const waiting = state.children.flatMap(c => pendingRewards(c).map(r => ({ c, r })));
+  return el('div', { class: 'parent-row', style: 'flex-direction:column;align-items:stretch' },
+    el('strong', { style: 'font-size:1.4rem' }, '🎁 Real-life rewards'),
+    el('p', { class: 'note', style: 'margin:0' }, `Stars build up levels. Every ${LEVELS_PER_TIER} levels is a new tier, and the child earns the reward you set here. Level 5 takes about a week of daily play, level 10 about 3 weeks, level 15 about 6 weeks.`),
+    ...rows,
+    waiting.length
+      ? el('div', {}, el('strong', {}, 'Waiting for their reward:'), ...waiting.map(({ c, r }) =>
+        el('div', { class: 'row', style: 'justify-content:space-between' },
+          el('span', {}, `${c.name}: ${tierInfo(r.tier).icon} ${rewardFor(state, r.tier)} (earned ${r.date})`),
+          el('button', { class: 'big-btn small-btn', onclick: () => { r.given = true; r.givenDate = new Date().toLocaleDateString('en-CA'); saveState(state); showParent(); } }, 'Mark given'))))
+      : el('p', { class: 'note', style: 'margin:0' }, 'No rewards waiting right now.'));
 }
 
 /* Parent PIN: set, change or remove the 4-digit PIN for the parent area. */

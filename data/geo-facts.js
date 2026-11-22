@@ -1,0 +1,135 @@
+/* =========================================================
+   Country facts for the geography games, written for kids.
+   level: 1 = big and famous (Little Stars and up)
+          2 = well known (Explorers and up)
+          3 = harder (Champions)
+   fact: one true, simple sentence said when the child finds it.
+   Capitals and continents come from data/world.js.
+   Countries that sit across two continents (Russia, Türkiye, Egypt,
+   Kazakhstan) are left out of "which continent" questions.
+   ========================================================= */
+export const FACTS = {
+  // Level 1
+  AU: { level: 1, pic: '🦘', fact: 'Australia is home to kangaroos, koalas and the Great Barrier Reef.' },
+  US: { level: 1, pic: '🗽', fact: 'The United States has 50 states and the Grand Canyon.' },
+  CN: { level: 1, pic: '🐼', fact: 'China is home to giant pandas and the Great Wall.' },
+  BR: { level: 1, pic: '🦜', fact: 'Brazil has most of the Amazon rainforest, the biggest rainforest in the world.' },
+  RU: { level: 1, pic: '❄️', fact: 'Russia is the biggest country in the world.' },
+  IN: { level: 1, pic: '🐯', fact: 'India has more people than any other country, and Bengal tigers.' },
+  CA: { level: 1, pic: '🍁', fact: 'Canada has a maple leaf on its flag, and lots of moose and bears.' },
+  SA: { level: 1, pic: '🕋', fact: 'Saudi Arabia is where Makkah and Madinah are. Muslims face the Kaaba in Makkah when they pray.' },
+  EG: { level: 1, pic: '🐫', fact: 'Egypt has the pyramids and the river Nile.' },
+  GB: { level: 1, pic: '💂', fact: 'The United Kingdom is made of England, Scotland, Wales and Northern Ireland.' },
+  JP: { level: 1, pic: '🗻', fact: 'Japan is made of islands and has a famous mountain called Mount Fuji.' },
+  // Level 2
+  NZ: { level: 2, pic: '🥝', fact: 'New Zealand has a bird called the kiwi that cannot fly.' },
+  ID: { level: 2, pic: '🌋', fact: 'Indonesia has more Muslims than any other country, and more than 17,000 islands.' },
+  PK: { level: 2, pic: '🏔️', fact: 'Pakistan has K2, the second highest mountain in the world.' },
+  TR: { level: 2, pic: '🕌', fact: 'Türkiye has the Blue Mosque in the city of Istanbul.' },
+  FR: { level: 2, pic: '🗼', fact: 'France has the Eiffel Tower in Paris.' },
+  IT: { level: 2, pic: '🍕', fact: 'Italy is shaped like a boot, and pizza comes from there.' },
+  ES: { level: 2, pic: '⚽', fact: 'Spain has famous football teams and the old palace of Alhambra, built by Muslims.' },
+  DE: { level: 2, pic: '🏰', fact: 'Germany has lots of castles, and the cars Mercedes, BMW and Porsche come from there.' },
+  MX: { level: 2, pic: '🌮', fact: 'Mexico has old pyramids too, and tacos come from there.' },
+  AR: { level: 2, pic: '⚽', fact: 'Argentina is famous for football, and has penguins in the far south.' },
+  ZA: { level: 2, pic: '🦁', fact: 'South Africa has lions, elephants and penguins.' },
+  KE: { level: 2, pic: '🦒', fact: 'Kenya has giraffes, zebras and some of the fastest runners in the world.' },
+  NG: { level: 2, pic: '🌍', fact: 'Nigeria has more people than any other country in Africa.' },
+  MA: { level: 2, pic: '🐪', fact: 'Morocco has the Sahara desert and colourful markets called souks.' },
+  AE: { level: 2, pic: '🏙️', fact: 'The United Arab Emirates has the Burj Khalifa, the tallest building in the world.' },
+  MY: { level: 2, pic: '🏙️', fact: 'Malaysia has the Petronas Twin Towers and orangutans in its rainforests.' },
+  LB: { level: 2, pic: '🌲', fact: 'Lebanon has a cedar tree on its flag.' },
+  PS: { level: 2, pic: '🫒', fact: 'Palestine is where Masjid al-Aqsa is, in the city of Al-Quds, also called Jerusalem.' },
+  JO: { level: 2, pic: '🏜️', fact: 'Jordan has Petra, a city carved into pink rock.' },
+  GR: { level: 2, pic: '🏛️', fact: 'Greece has thousands of islands and very old temples.' },
+  NP: { level: 2, pic: '🏔️', fact: 'Mount Everest, the highest mountain in the world, is on the border of Nepal and China.' },
+  KR: { level: 2, pic: '📱', fact: 'South Korea makes Samsung phones and tablets.' },
+  TH: { level: 2, pic: '🐘', fact: 'Thailand has elephants and golden temples.' },
+  PE: { level: 2, pic: '🦙', fact: 'Peru has llamas and an old city in the mountains called Machu Picchu.' },
+  CL: { level: 2, pic: '🌶️', fact: 'Chile is a very long, thin country next to the Pacific Ocean.' },
+  NO: { level: 2, pic: '🌌', fact: 'In Norway you can see the northern lights dancing in the sky.' },
+  IE: { level: 2, pic: '☘️', fact: 'Ireland is so green it is called the Emerald Isle.' },
+  GL: { level: 2, pic: '🧊', fact: 'Greenland is the biggest island in the world and is mostly covered in ice.' },
+  MG: { level: 2, pic: '🐒', fact: 'Madagascar is a big island with lemurs that live nowhere else.' },
+  // Level 3
+  BD: { level: 3, pic: '🐅', fact: 'Bangladesh has the Sundarbans, a huge mangrove forest with tigers.' },
+  AF: { level: 3, pic: '⛰️', fact: 'Afghanistan is a mountain country in the middle of Asia.' },
+  IR: { level: 3, pic: '🕌', fact: 'Iran has beautiful blue-tiled mosques in the city of Isfahan.' },
+  IQ: { level: 3, pic: '🌴', fact: 'Iraq has two great rivers, the Tigris and the Euphrates.' },
+  SY: { level: 3, pic: '🕌', fact: 'Syria has Damascus, one of the oldest cities in the world.' },
+  YE: { level: 3, pic: '🏘️', fact: 'Yemen has mud-brick tower houses many floors high.' },
+  OM: { level: 3, pic: '🐢', fact: 'Oman has beaches where green sea turtles lay their eggs.' },
+  QA: { level: 3, pic: '⚽', fact: 'Qatar hosted the football World Cup in 2022.' },
+  KW: { level: 3, pic: '🛢️', fact: 'Kuwait is a small country with lots of oil.' },
+  SO: { level: 3, pic: '🐫', fact: 'Somalia has more camels than any other country.' },
+  SD: { level: 3, pic: '🏺', fact: 'Sudan has more pyramids than Egypt.' },
+  ET: { level: 3, pic: '☕', fact: 'Ethiopia is where coffee was first found.' },
+  TZ: { level: 3, pic: '🏔️', fact: 'Tanzania has Mount Kilimanjaro, the highest mountain in Africa.' },
+  DZ: { level: 3, pic: '🏜️', fact: 'Algeria is the biggest country in Africa.' },
+  ML: { level: 3, pic: '📚', fact: 'Mali has Timbuktu, a city famous for its old Islamic books.' },
+  SN: { level: 3, pic: '🌳', fact: 'Senegal has giant baobab trees.' },
+  NL: { level: 3, pic: '🌷', fact: 'The Netherlands has tulips, windmills and lots of bikes.' },
+  CH: { level: 3, pic: '🧀', fact: 'Switzerland has the Alps mountains and is famous for chocolate.' },
+  SE: { level: 3, pic: '🫎', fact: 'Sweden has lots of forests, lakes and moose.' },
+  PT: { level: 3, pic: '⛵', fact: 'Portugal is famous for its sailors who explored the world long ago.' },
+  PL: { level: 3, pic: '🥟', fact: 'Poland has old salt mines with rooms carved out of salt.' },
+  UA: { level: 3, pic: '🌻', fact: 'Ukraine has huge fields of sunflowers and wheat.' },
+  BA: { level: 3, pic: '🌉', fact: 'Bosnia and Herzegovina has a famous old bridge in the town of Mostar.' },
+  AL: { level: 3, pic: '🦅', fact: 'Albania has a black eagle on its flag.' },
+  KZ: { level: 3, pic: '🚀', fact: 'Kazakhstan has a place where rockets are launched into space.' },
+  UZ: { level: 3, pic: '🕌', fact: 'Uzbekistan has Samarkand and Bukhara, old cities on the Silk Road.' },
+  MN: { level: 3, pic: '🐎', fact: 'Mongolia has more horses than people.' },
+  VN: { level: 3, pic: '🛶', fact: 'Vietnam is long and thin, with rice fields and a famous bay of islands.' },
+  PH: { level: 3, pic: '🏝️', fact: 'The Philippines has more than 7,000 islands.' },
+  SG: { level: 3, pic: '🦁', fact: 'Singapore is a tiny country that is also one city.' },
+  BN: { level: 3, pic: '🕌', fact: 'Brunei is a small Muslim country on the island of Borneo.' },
+  LK: { level: 3, pic: '🐘', fact: 'Sri Lanka is an island shaped like a teardrop, famous for tea.' },
+  PG: { level: 3, pic: '🦚', fact: 'Papua New Guinea has over 800 languages, more than any other country.' },
+  FJ: { level: 3, pic: '🏝️', fact: 'Fiji is a country made of over 300 islands in the Pacific Ocean.' },
+  CO: { level: 3, pic: '🦋', fact: 'Colombia has more kinds of birds than any other country.' },
+  VE: { level: 3, pic: '💧', fact: 'Venezuela has Angel Falls, the highest waterfall in the world.' },
+  CU: { level: 3, pic: '🏝️', fact: 'Cuba is the biggest island in the Caribbean Sea.' },
+  IS: { level: 3, pic: '🌋', fact: 'Iceland has volcanoes, glaciers and hot springs.' },
+};
+
+/* Questions about the whole world. a = answer, w = wrong ones.
+   level as above. */
+export const WORLD_QS = [
+  { level: 1, q: 'What is the biggest ocean?', a: 'Pacific Ocean', w: ['Indian Ocean', 'Atlantic Ocean'], pic: '🌊' },
+  { level: 1, q: 'How many continents are there?', a: '7', w: ['5', '10'], pic: '🌍' },
+  { level: 1, q: 'Which country do we live in?', a: 'Australia', w: ['Africa', 'Europe'], pic: '🦘', why: 'Australia is a country and a continent too.' },
+  { level: 1, q: 'What is the biggest country in the world?', a: 'Russia', w: ['Australia', 'China'], pic: '❄️' },
+  { level: 1, q: 'What colour are oceans on a map?', a: 'Blue', w: ['Green', 'Red'], pic: '🗺️' },
+  { level: 2, q: 'What is the highest mountain in the world?', a: 'Mount Everest', w: ['Mount Fuji', 'Mount Kilimanjaro'], pic: '🏔️' },
+  { level: 2, q: 'Which is the biggest hot desert in the world?', a: 'Sahara', w: ['Simpson Desert', 'Gobi'], pic: '🏜️' },
+  { level: 2, q: 'Which continent is the coldest?', a: 'Antarctica', w: ['Europe', 'Asia'], pic: '🐧' },
+  { level: 2, q: 'Which continent has the most people?', a: 'Asia', w: ['Africa', 'Europe'], pic: '👨‍👩‍👧‍👦' },
+  { level: 2, q: 'The line around the middle of the Earth is called the…', a: 'Equator', w: ['North Pole', 'Border'], pic: '🌐' },
+  { level: 2, q: 'Which country has the most people?', a: 'India', w: ['Australia', 'Brazil'], pic: '👥' },
+  { level: 2, q: 'Which ocean is between Australia and Africa?', a: 'Indian Ocean', w: ['Arctic Ocean', 'Atlantic Ocean'], pic: '🌊' },
+  { level: 2, q: 'Which is the biggest continent?', a: 'Asia', w: ['Australia', 'South America'], pic: '🌏' },
+  { level: 2, q: 'Which river runs through Egypt?', a: 'Nile', w: ['Amazon', 'Murray'], pic: '🐊' },
+  { level: 2, q: 'What is the longest river in Australia?', a: 'Murray River', w: ['Nile', 'Thames'], pic: '🛶' },
+  { level: 2, q: 'What is the capital city of Australia?', a: 'Canberra', w: ['Sydney', 'Melbourne'], pic: '🦘' },
+  { level: 2, q: 'Where is the Kaaba?', a: 'Makkah', w: ['Madinah', 'Cairo'], pic: '🕋' },
+  { level: 3, q: 'What is the smallest country in the world?', a: 'Vatican City', w: ['Singapore', 'Fiji'], pic: '🔍' },
+  { level: 3, q: 'Which ocean is the coldest, around the North Pole?', a: 'Arctic Ocean', w: ['Indian Ocean', 'Pacific Ocean'], pic: '🐻‍❄️' },
+  { level: 3, q: 'Which is the smallest continent?', a: 'Australia', w: ['Europe', 'Antarctica'], pic: '🦘', why: 'Australia is the smallest continent. With the islands near it, the region is called Oceania.' },
+  { level: 3, q: 'Lines that go from the North Pole to the South Pole on a globe are called…', a: 'Longitude', w: ['Latitude', 'Equator'], pic: '🌐' },
+  { level: 3, q: 'Lines that go around the globe, side to side like the equator, are called…', a: 'Latitude', w: ['Longitude', 'Borders'], pic: '🌐' },
+  { level: 3, q: 'Australia is in which half of the world?', a: 'Southern Hemisphere', w: ['Northern Hemisphere', 'Western Hemisphere'], pic: '🌏', why: 'Australia is south of the equator.' },
+  { level: 3, q: 'When it is summer in Australia, it is ___ in Europe.', a: 'Winter', w: ['Summer', 'Spring'], pic: '☀️', why: 'The two halves of the world have opposite seasons.' },
+  { level: 3, q: 'Which mountain range has Mount Everest?', a: 'Himalayas', w: ['Alps', 'Andes'], pic: '🏔️' },
+  { level: 3, q: 'Which is the biggest rainforest in the world?', a: 'Amazon', w: ['Daintree', 'Congo'], pic: '🌳' },
+  { level: 3, q: 'Which sea is so salty you float easily in it?', a: 'Dead Sea', w: ['Red Sea', 'Coral Sea'], pic: '🧂' },
+  { level: 3, q: 'Masjid an-Nabawi, the Prophet’s Mosque, is in which city?', a: 'Madinah', w: ['Makkah', 'Istanbul'], pic: '🕌' },
+  { level: 3, q: 'Which is the biggest coral reef in the world?', a: 'Great Barrier Reef', w: ['Ningaloo Reef', 'Red Sea Reef'], pic: '🐠' },
+  { level: 3, q: 'How many states does Australia have?', a: '6', w: ['8', '4'], pic: '🦘', why: 'Australia has 6 states and 2 big territories.' },
+];
+
+/* Fixes to the capital names in world.js. */
+export const CAPITAL_FIX = { MN: 'Ulaanbaatar', PS: 'Al-Quds (Jerusalem)', LK: 'Sri Jayawardenepura Kotte', US: 'Washington, D.C.' };
+/* Left out of capital city questions (disputed, or the capital is not the city kids know). */
+export const NO_CAPITAL_Q = ['PS', 'LK', 'BO', 'IL', 'TW', 'EH'];
+/* Left out of "which continent" questions (they sit across two continents). */
+export const NO_CONTINENT_Q = ['AU', 'RU', 'TR', 'EG', 'KZ', 'AZ', 'GE', 'AM', 'CY', 'PA', 'GL'];
