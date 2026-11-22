@@ -8,7 +8,7 @@
      little   - 2 answer choices.
      explorer - 3 answer choices.
    ========================================================= */
-import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
+import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
 
 /* Each room: options[0] is always the right answer (they are shuffled on screen).
    The third option is only shown to Explorers. */
@@ -96,14 +96,14 @@ export default {
           b.classList.add('right');
           const praise = pick(PRAISE);
           toast(praise);
-          speak([praise, item.why]);
           done.add(r.id);
-          setTimeout(() => {
+          speakThen([praise, item.why], 1500).then(() => {
+            if (!root.isConnected) return;
             if (done.size === ROOMS.length) {
               sfx.win();
               ctx.finish(band === 'little' || mistakes <= 2 ? 3 : 2, 'The kittens love their new house!');
             } else house();
-          }, Math.min(6000, 1800 + item.why.length * 45));
+          });
         } else {
           mistakes++;
           sfx.tryAgain();

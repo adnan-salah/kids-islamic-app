@@ -4,7 +4,7 @@
             plus the sticker book, the treasure chest, and a Parent area
             behind a hold-and-PIN lock.
    ========================================================= */
-import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
+import { BANDS, loadState, saveState, resetState, speak, stopSpeech, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
 import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
 
@@ -207,6 +207,7 @@ function playGame(childId, gameId) {
   const game = GAMES.find(g => g.id === gameId);
   const subject = subjectOf(gameId);
   setBg(subject.id);
+  usePraise(subject.id === 'islam');
   const root = el('div', { class: 'stage' });
   let finished = false;
 
@@ -245,7 +246,7 @@ function playGame(childId, gameId) {
 function showDone(childId, gameId, stars, message, newSticker) {
   const child = findChild(childId);
   const subject = subjectOf(gameId);
-  const praise = pick(['Well done!', 'Great job!', 'Amazing!', 'MashaAllah!']);
+  const praise = pick(subject.id === 'islam' ? ['MashaAllah!', 'Well done!', 'Great job!'] : ['Well done!', 'Great job!', 'Amazing!']);
   const ready = chestReady(child);
   sfx.win();
   setTimeout(() => confetti(), 150);

@@ -7,7 +7,7 @@
      explorer - picture and description; pick the pillar's name.
      champion - harder questions about each pillar.
    ========================================================= */
-import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
+import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
 
 export const PILLARS = [
   { id: 'shahadah', name: 'Shahadah', short: 'Shahadah', emoji: '☝️',
@@ -113,9 +113,9 @@ export default {
           pillarEls[round].classList.add('built');
           const praise = pick(PRAISE);
           toast(praise);
-          speak([praise, `You built the pillar of ${pillar.short}.`]);
           round++;
-          setTimeout(() => (round < PILLARS.length ? showRound() : complete()), 2200);
+          speakThen([praise, `You built the pillar of ${pillar.short}.`], 1800)
+            .then(() => { if (root.isConnected) round < PILLARS.length ? showRound() : complete(); });
         } else {
           mistakes++;
           sfx.tryAgain();
@@ -129,9 +129,9 @@ export default {
       dome.style.opacity = '1';
       area.replaceChildren(el('div', { class: 'prompt' },
         el('p', {}, 'You built all Five Pillars of Islam!')));
-      speak('MashaAllah! You built all five pillars of Islam!');
       const stars = mistakes === 0 ? 3 : 2;
-      setTimeout(() => ctx.finish(stars, 'You built the house of Islam!'), 3000);
+      speakThen('MashaAllah! You built all five pillars of Islam!', 2000)
+        .then(() => ctx.finish(stars, 'You built the house of Islam!'));
     }
   },
 };

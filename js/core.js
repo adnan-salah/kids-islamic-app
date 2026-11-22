@@ -89,11 +89,13 @@ export function setVoice(changes) {
 
 const clipPlayer = new Audio();
 let speakRun = 0; // bumps on every new speak() so old ones stop
+let endClip = null; // finishes the clip that is playing, if it gets stopped
 
 /** Stop anything being said right now. */
 export function stopSpeech() {
   speakRun++;
   clipPlayer.pause();
+  endClip?.();
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
 
@@ -101,7 +103,9 @@ export function stopSpeech() {
 export const hasClip = line => Boolean(clips[line]);
 
 function playClip(file) {
-  return new Promise(resolve => {
+  return new Promise(done => {
+    const resolve = () => { if (endClip === resolve) endClip = null; done(); };
+    endClip = resolve;
     clipPlayer.src = `audio/${file}`;
     clipPlayer.playbackRate = 1;
     clipPlayer.onended = resolve;
@@ -133,6 +137,18 @@ export async function speak(lines) {
     if (voiceSettings.name === NATURAL && clips[line]) await playClip(clips[line]);
     else await sayWithTablet(line);
   }
+}
+
+/**
+ * Say the lines, then resolve once they have finished, plus a short pause.
+ * Games wait on this before moving on, so Miriam is never cut off mid-sentence.
+ * minMs: wait at least this long in total. Gives up after 20 seconds just in case.
+ */
+export function speakThen(lines, minMs = 1200) {
+  const t0 = performance.now();
+  const spoken = Promise.race([speak(lines), new Promise(r => setTimeout(r, 20000))]);
+  return spoken.then(() => new Promise(r =>
+    setTimeout(r, Math.max(400, minMs - (performance.now() - t0)))));
 }
 
 /* ---------- Sounds ----------
@@ -229,8 +245,15 @@ export function shuffle(list) {
 /** Random pick from an array. */
 export const pick = list => list[Math.floor(Math.random() * list.length)];
 
-/** Kind words for a right answer, chosen at random. */
-export const PRAISE = ['MashaAllah!', 'Well done!', 'Great job!', 'Excellent!', 'Alhamdulillah!'];
+/** Kind words for a right answer, chosen at random.
+    MashaAllah and Alhamdulillah are only used in the Islam games (see usePraise). */
+const GENERAL_PRAISE = ['Well done!', 'Great job!', 'Excellent!', 'Amazing!'];
+const ISLAMIC_PRAISE = ['MashaAllah!', 'Alhamdulillah!', 'Well done!', 'Great job!'];
+export const PRAISE = [...GENERAL_PRAISE];
+/** Called when a game starts: islamic = true for the Islam subject. */
+export function usePraise(islamic) {
+  PRAISE.splice(0, PRAISE.length, ...(islamic ? ISLAMIC_PRAISE : GENERAL_PRAISE));
+}
 
 /* ---------- Grown-up check ----------
    If a parent PIN is set, asks for it on a number pad.

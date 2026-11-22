@@ -7,7 +7,7 @@
                 then read a short story and answer 2 questions.
    Australian spelling is used (neighbour, favourite).
    ========================================================= */
-import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
+import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
 import { runQuiz } from '../quiz.js';
 
 export const EASY = [
@@ -137,8 +137,7 @@ export default {
             sfx.right();
             const praise = pick(PRAISE);
             toast(praise);
-            speak([praise, word]);
-            setTimeout(nextStep, 1600);
+            speakThen([praise, word], 1600).then(() => { if (root.isConnected) nextStep(); });
           }
         } else {
           mistakes++;
@@ -177,8 +176,7 @@ export default {
           if (at === words.length) {
             sfx.right();
             toast(pick(PRAISE));
-            speak(text);
-            setTimeout(nextStep, 2600);
+            speakThen(text, 1600).then(() => { if (root.isConnected) nextStep(); });
           }
         } else {
           mistakes++;

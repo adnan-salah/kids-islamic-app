@@ -17,7 +17,7 @@
      onDone(mistakes) is called after the last question.
    Wrong answers never end the game: the child just tries again.
    ========================================================= */
-import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from './core.js';
+import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE } from './core.js';
 
 export function runQuiz(root, questions, onDone, { shuffleOptions = true } = {}) {
   let qi = 0;
@@ -54,13 +54,12 @@ export function runQuiz(root, questions, onDone, { shuffleOptions = true } = {})
         btn.classList.add('right');
         const praise = pick(PRAISE);
         toast(praise);
-        speak([praise, q.explain]);
-        // Give longer explanations time to be heard.
-        const wait = q.explain ? Math.min(6000, 1800 + q.explain.length * 45) : 1500;
-        setTimeout(() => {
+        // Wait for Miriam to finish before the next question starts.
+        speakThen([praise, q.explain], 1500).then(() => {
+          if (!box.isConnected) return; // child left the game
           qi++;
           qi < questions.length ? show() : onDone(mistakes);
-        }, wait);
+        });
       } else {
         mistakes++;
         sfx.tryAgain();
