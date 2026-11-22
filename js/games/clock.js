@@ -124,7 +124,8 @@ export default {
   bands: ['explorer', 'champion'],
 
   start(ctx) {
-    const { root, band } = ctx;
+    const { root } = ctx;
+    const band = ctx.harder ? 'champion' : ctx.band; // harder maths gets quarter-past times and more coins
     const questions = shuffle([
       ...Array.from({ length: 4 }, () => timeQuestion(band)),
       ...Array.from({ length: 4 }, () => moneyQuestion(band)),

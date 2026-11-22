@@ -8,7 +8,7 @@
      little   - 2 answer choices.
      explorer - 3 answer choices.
    ========================================================= */
-import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
+import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE, praiseFor } from '../core.js';
 
 /* Each room: options[0] is always the right answer (they are shuffled on screen).
    The third option is only shown to Explorers. */
@@ -94,7 +94,7 @@ export default {
           box.dataset.locked = '1';
           sfx.right();
           b.classList.add('right');
-          const praise = pick(PRAISE);
+          const praise = praiseFor(item.q, item.why);
           toast(praise);
           done.add(r.id);
           speakThen([praise, item.why], 1500).then(() => {

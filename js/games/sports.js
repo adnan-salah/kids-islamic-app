@@ -85,7 +85,7 @@ export default {
 
   start(ctx) {
     const { root, band } = ctx;
-    let level = band === 'champion' ? 'turbo' : 'normal';
+    let level = band === 'champion' || ctx.harder ? 'turbo' : 'normal';
     let timer = null;
     // Stop the rival car if the child leaves the game part-way.
     const stopTimer = () => { clearInterval(timer); timer = null; };

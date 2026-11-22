@@ -255,6 +255,14 @@ export function usePraise(islamic) {
   PRAISE.splice(0, PRAISE.length, ...(islamic ? ISLAMIC_PRAISE : GENERAL_PRAISE));
 }
 
+/* Words that mark a question as Islamic, wherever it appears (manners, maths, etc). */
+const ISLAMIC_WORDS = /\b(allah|alhamdulillah|bismillah|bismika|insha'?allah|masha'?allah|subhan|yarhamuk|jazak|assalamu|salam|dua|duas|salah|rakah|wudu|quran|qur'an|prophet|muslims?|mosque|masjid|eid|ramadan|fajr|dhuhr|asr|maghrib|isha|kaaba|makkah|hajj|zakat|sawm)\b/i;
+
+/** Praise for a right answer. Islamic praise if the question is Islamic. */
+export function praiseFor(...texts) {
+  return pick(ISLAMIC_WORDS.test(texts.filter(Boolean).join(' ')) ? ISLAMIC_PRAISE : PRAISE);
+}
+
 /* ---------- Grown-up check ----------
    If a parent PIN is set, asks for it on a number pad.
    If not, asks a sum instead (e.g. 7 × 8).

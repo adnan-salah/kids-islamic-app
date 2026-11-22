@@ -223,7 +223,8 @@ function playGame(childId, gameId) {
   game.start({
     root,
     child,
-    band: child.band,
+    band: mathsBand(child, subject),
+    harder: subject.id === 'maths' && child.maths === 'harder',
     finish(stars, message) {
       if (finished) return; // child left the game early
       finished = true;
@@ -240,6 +241,14 @@ function playGame(childId, gameId) {
       showDone(childId, gameId, stars, message, newSticker);
     },
   });
+}
+
+/* Maths can be set harder per child in the parent area, since the
+   6 and 7 year olds share a band but not the same maths level.
+   'harder' = Explorer+ questions, 'champion' = the Champions' maths. */
+function mathsBand(child, subject) {
+  if (subject.id === 'maths' && child.maths === 'champion') return 'champion';
+  return child.band;
 }
 
 /* ---------- Screen 4: Well done! ---------- */
@@ -335,8 +344,15 @@ function showParent() {
           return o;
         }));
       band.addEventListener('change', () => { child.band = band.value; saveState(state); });
+      const maths = el('select', { 'aria-label': 'Maths level' },
+        [['', 'Maths: same as age group'], ['harder', 'Maths: harder'], ['champion', 'Maths: hardest (Champions)']].map(([id, label]) => {
+          const o = el('option', { value: id }, label);
+          if (id === (child.maths || '')) o.selected = true;
+          return o;
+        }));
+      maths.addEventListener('change', () => { child.maths = maths.value || undefined; saveState(state); });
       return el('div', { class: 'parent-row' },
-        avatarBtn, file, name, band, emojiBtn, el('span', { class: 'note' }, `⭐ ${child.stars}`));
+        avatarBtn, file, name, band, maths, emojiBtn, el('span', { class: 'note' }, `⭐ ${child.stars}`));
     })),
     pinPanel(),
     voicePanel(),

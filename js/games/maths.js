@@ -6,6 +6,9 @@
      little   - count 1 to 5 things.
      explorer - add and take away up to 20, plus rakah sums.
      champion - times tables and word problems.
+     harder   - (Explorer set to harder maths in the parent area)
+                adding and taking away to 100, 2, 5 and 10 times tables,
+                missing numbers, doubles and halves, change from $10.
    Questions are made up fresh each game, so it never gets stale.
    Rakah counts used (fard): Fajr 2, Dhuhr 4, Asr 4, Maghrib 3, Isha 4.
    ========================================================= */
@@ -64,6 +67,44 @@ function explorerQuestion() {
   return { prompt: `${name} reads ${a} pages of a book on Saturday and ${b} pages on Sunday. How many pages altogether?`, pic: '📖', options: choices(a + b), answer: String(a + b) };
 }
 
+/* Explorer+: for a 6 or 7 year old who finds Explorer maths too easy. */
+function harderQuestion() {
+  const name = pick(NAMES);
+  const kind = rand(1, 8);
+  if (kind === 1) {
+    const a = rand(15, 59), b = rand(12, 39);
+    return { prompt: `${a} + ${b} = ?`, pic: '➕', options: choices(a + b, 10, 1), answer: String(a + b) };
+  }
+  if (kind === 2) {
+    const a = rand(35, 99), b = rand(12, a - 10);
+    return { prompt: `${a} − ${b} = ?`, pic: '➖', options: choices(a - b, 10, 1), answer: String(a - b) };
+  }
+  if (kind === 3) {
+    const t = pick([2, 5, 10]), n = rand(2, 12);
+    return { prompt: `${n} × ${t} = ?`, pic: '✖️', options: choices(n * t, t === 2 ? 4 : t, 1), answer: String(n * t) };
+  }
+  if (kind === 4) {
+    const a = rand(4, 15), b = rand(5, 15);
+    return { prompt: `? + ${a} = ${a + b}. What is the missing number?`, pic: '❓', options: choices(b, 3, 1), answer: String(b) };
+  }
+  if (kind === 5) {
+    const n = rand(6, 25);
+    return Math.random() < 0.5
+      ? { prompt: `What is double ${n}?`, pic: '👯', options: choices(2 * n, 4, 1), answer: String(2 * n) }
+      : { prompt: `What is half of ${2 * n}?`, pic: '🍰', options: choices(n, 3, 1), answer: String(n) };
+  }
+  if (kind === 6) {
+    const price = rand(2, 9);
+    return { prompt: `${name} buys a ball for ${dollars(price)} with a ${dollars(10)} note. How much change?`, pic: '💵', options: choices(10 - price, 2, 1).map(Number).map(dollars), answer: dollars(10 - price) };
+  }
+  if (kind === 7) {
+    const packs = rand(2, 6), each = pick([2, 5, 10]);
+    return { prompt: `There are ${packs} packs of stickers with ${each} stickers in each pack. How many stickers?`, pic: '⭐', options: choices(packs * each, 4, 1), answer: String(packs * each) };
+  }
+  const a = rand(18, 45), b = rand(11, 30);
+  return { prompt: `${name}'s team scores ${a} points, then ${b} more. How many points altogether?`, pic: '🏀', options: choices(a + b, 10, 1), answer: String(a + b) };
+}
+
 function championQuestion() {
   const name = pick(NAMES);
   const kind = rand(1, 6);
@@ -99,8 +140,9 @@ export default {
 
   start(ctx) {
     const { root, band } = ctx;
-    const make = { little: littleQuestion, explorer: explorerQuestion, champion: championQuestion }[band];
-    const count = band === 'little' ? 5 : 8;
+    const make = band === 'explorer' && ctx.harder ? harderQuestion
+      : { little: littleQuestion, explorer: explorerQuestion, champion: championQuestion }[band];
+    const count = band === 'little' ? 5 : ctx.harder ? 10 : 8;
     const questions = Array.from({ length: count }, make);
     runQuiz(root, questions, mistakes =>
       ctx.finish(starsFrom(mistakes, band), 'You are a maths star!'), { shuffleOptions: false });
