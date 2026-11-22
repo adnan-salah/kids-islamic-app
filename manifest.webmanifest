@@ -1,0 +1,16 @@
+{
+  "name": "Noor Learning",
+  "short_name": "Noor Learning",
+  "description": "Learning games for the family: English, maths, the world, science and Islam.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#fff1cc",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "img/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "img/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
