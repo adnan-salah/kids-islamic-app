@@ -210,15 +210,82 @@ export const pick = list => list[Math.floor(Math.random() * list.length)];
 export const PRAISE = ['MashaAllah!', 'Well done!', 'Great job!', 'Excellent!', 'Alhamdulillah!'];
 
 /* ---------- Grown-up check ----------
-   A pop-over sum (e.g. 7 × 8). Resolves true if answered right.
-   Used where a parent needs to approve something, like a surah badge. */
+   If a parent PIN is set, asks for it on a number pad.
+   If not, asks a sum instead (e.g. 7 × 8).
+   Resolves true if answered right.
+   It guards the parent area and things a parent must approve, like a surah badge.
+   The PIN is never stored itself: only a salted hash is kept, on this tablet only. */
+const PIN_KEY = 'noor-learning:pin';
+const LOCK_KEY = 'noor-learning:pin-lock';
+const MAX_TRIES = 5;          // wrong tries before a short lock-out
+const LOCK_MS = 60 * 1000;    // lock-out length
+
+export const hasPin = () => !!localStorage.getItem(PIN_KEY);
+export const clearPin = () => localStorage.removeItem(PIN_KEY);
+
+async function hashPin(pin, salt) {
+  const data = new TextEncoder().encode(`${salt}:${pin}`);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+export async function setPin(pin) {
+  const salt = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+  localStorage.setItem(PIN_KEY, JSON.stringify({ salt, hash: await hashPin(pin, salt) }));
+}
+async function pinMatches(pin) {
+  try {
+    const { salt, hash } = JSON.parse(localStorage.getItem(PIN_KEY));
+    return (await hashPin(pin, salt)) === hash;
+  } catch { return false; }
+}
+
+/** A 4-digit number pad. onDone(pin) gets the digits; return false to clear and shake. */
+export function pinPad(message, onDone, onCancel) {
+  let digits = '';
+  const dots = el('div', { class: 'pin-dots' }, [0, 1, 2, 3].map(() => el('span')));
+  const msg = el('p', { class: 'note', style: 'margin:0;text-align:center' }, message);
+  const draw = () => [...dots.children].forEach((d, i) => d.classList.toggle('on', i < digits.length));
+  const press = async k => {
+    if (k === '⌫') digits = digits.slice(0, -1);
+    else if (digits.length < 4) digits += k;
+    draw();
+    if (digits.length === 4) {
+      const ok = await onDone(digits);
+      if (ok === false) { wiggle(dots); digits = ''; setTimeout(draw, 300); }
+    }
+  };
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
+  const pad = el('div', { class: 'pin-pad' }, keys.map(k =>
+    k ? el('button', { class: 'pin-key', 'aria-label': k === '⌫' ? 'Delete' : k, onclick: () => press(k) }, k) : el('span')));
+  const box = el('div', { class: 'math-gate panel' }, msg, dots, pad,
+    el('button', { class: 'big-btn secondary', onclick: onCancel }, 'Cancel'));
+  box.setMessage = text => { msg.textContent = text; };
+  return box;
+}
+
 export function askGrownUp(message = 'Grown-ups only') {
   return new Promise(resolve => {
+    let overlay;
+    const close = ok => { overlay.remove(); resolve(ok); };
+    if (hasPin()) {
+      const box = pinPad(`${message}: enter the parent PIN`, async pin => {
+        const lock = JSON.parse(localStorage.getItem(LOCK_KEY) || '{"tries":0,"until":0}');
+        if (Date.now() < lock.until) { box.setMessage('Too many tries. Wait a minute and try again.'); return false; }
+        if (await pinMatches(pin)) { localStorage.removeItem(LOCK_KEY); close(true); return true; }
+        lock.tries++;
+        if (lock.tries >= MAX_TRIES) { lock.tries = 0; lock.until = Date.now() + LOCK_MS; box.setMessage('Too many tries. Wait a minute and try again.'); }
+        else box.setMessage('Wrong PIN. Try again.');
+        localStorage.setItem(LOCK_KEY, JSON.stringify(lock));
+        return false;
+      }, () => close(false));
+      overlay = el('div', { class: 'overlay' }, box);
+      document.body.append(overlay);
+      return;
+    }
     const a = 6 + Math.floor(Math.random() * 7);
     const b = 5 + Math.floor(Math.random() * 8);
     const input = el('input', { type: 'number', inputmode: 'numeric', class: 'gate-input' });
-    const close = ok => { overlay.remove(); resolve(ok); };
-    const overlay = el('div', { class: 'overlay' },
+    overlay = el('div', { class: 'overlay' },
       el('div', { class: 'math-gate panel' },
         el('p', { class: 'note' }, message),
         el('div', { class: 'q' }, `${a} × ${b} = ?`),

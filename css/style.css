@@ -377,3 +377,17 @@ button {
   justify-content: center; font-size: 4.5rem; box-shadow: var(--shadow);
 }
 .sticker.locked { background: #e5e7eb; filter: grayscale(1); opacity: 0.35; font-size: 3rem; }
+
+/* ---------- Photos and PIN pad ---------- */
+.avatar-photo { width: 6.5rem; height: 6.5rem; border-radius: 50%; object-fit: cover; border: 4px solid var(--gold-light); }
+.avatar-photo.avatar-small { width: 3rem; height: 3rem; border-width: 3px; }
+.avatar-btn .avatar-photo { width: 100%; height: 100%; border: 0; }
+.avatar-btn { overflow: hidden; padding: 0; }
+.topbar h1.with-avatar { display: flex; align-items: center; gap: .6rem; }
+.small-btn { padding: .6rem 1.2rem; font-size: 1.2rem; }
+.pin-dots { display: flex; gap: 1rem; }
+.pin-dots span { width: 1.4rem; height: 1.4rem; border-radius: 50%; border: 3px solid #94a3b8; }
+.pin-dots span.on { background: #334155; border-color: #334155; }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 5rem); gap: .8rem; }
+.pin-key { width: 5rem; height: 5rem; border-radius: 50%; font-size: 2rem; font-weight: 700; background: #f1f5f9; }
+.pin-key:active { background: #cbd5e1; }

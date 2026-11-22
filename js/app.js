@@ -3,13 +3,39 @@
    Screens: Who's playing -> My games -> Game -> Well done
             plus a Parent area behind a hold-and-sum lock.
    ========================================================= */
-import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL } from './core.js';
+import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES } from './games/index.js';
 
 const app = document.getElementById('app');
 let state = loadState();
 
 const AVATARS = ['🌙', '⭐', '🌸', '🐣', '🦋', '🐢', '🦁', '🐪', '🌻', '🚀', '🐱', '🌈'];
+
+/* A child's picture: their photo if a parent added one, else their emoji. */
+function avatarEl(child, cls = 'emoji') {
+  return child.photo
+    ? el('img', { class: `avatar-photo ${cls}`, src: child.photo, alt: '' })
+    : el('span', { class: cls }, child.avatar);
+}
+
+/* Shrink a chosen photo to a small square, so it fits in tablet storage.
+   The photo stays on this tablet only. It is never uploaded anywhere. */
+function photoToDataUrl(file, size = 320) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const side = Math.min(img.width, img.height);
+      const canvas = el('canvas', { width: size, height: size });
+      canvas.getContext('2d').drawImage(img,
+        (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
+}
 
 /* Sticker book: one new sticker for every 10 stars. */
 const STICKERS = ['🕌', '🌙', '🌴', '🐪', '🏮', '🕋', '📖', '🌸', '🦋', '🌈', '🐎', '🌟'];
@@ -25,7 +51,7 @@ function showWho() {
     ),
     el('div', { class: 'tile-grid' }, state.children.map(child =>
       el('button', { class: 'tile', onclick: () => { sfx.tap(); showGames(child.id); } },
-        el('span', { class: 'emoji' }, child.avatar),
+        avatarEl(child),
         el('span', { class: 'label' }, child.name),
         el('span', { class: 'sub' }, `⭐ ${child.stars}`),
       ),
@@ -40,7 +66,7 @@ function showGames(childId) {
   app.replaceChildren(
     el('div', { class: 'topbar' },
       el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: showWho }, '🏠'),
-      el('h1', {}, `${child.avatar} ${child.name}`),
+      el('h1', { class: 'with-avatar' }, avatarEl(child, 'avatar-small'), child.name),
       el('button', { class: 'star-count', onclick: () => showStickers(childId) }, `⭐ ${child.stars}  📒`),
     ),
     el('div', { class: 'tile-grid' }, games.map(game =>
@@ -138,8 +164,8 @@ function showDone(childId, gameId, stars, message, newSticker) {
 }
 
 /* ---------- Parent area ----------
-   Locked: hold the ⚙️ button for 2 seconds, then answer a sum.
-   A 3-year-old won't get through; a 9-year-old might, which is fine. */
+   Locked: hold the ⚙️ button for 2 seconds, then enter the parent PIN
+   (or answer a sum, if no PIN has been set yet). */
 function parentButton() {
   let timer;
   const btn = el('button', { class: 'icon-btn', 'aria-label': 'Parent area (hold)', style: 'touch-action:none' }, '⚙️');
@@ -153,21 +179,7 @@ function parentButton() {
 }
 
 function showGate() {
-  const a = 6 + Math.floor(Math.random() * 7);
-  const b = 5 + Math.floor(Math.random() * 8);
-  const input = el('input', { type: 'number', inputmode: 'numeric', style: 'font-size:2rem;width:8rem;text-align:center;border-radius:16px;border:3px solid #cbd5e1;padding:.5rem' });
-  const check = () => (Number(input.value) === a * b ? showParent() : showWho());
-  app.replaceChildren(
-    el('div', { class: 'math-gate' },
-      el('p', { class: 'note' }, 'Grown-ups only'),
-      el('div', { class: 'q' }, `${a} × ${b} = ?`),
-      input,
-      el('div', { class: 'row', style: 'display:flex;gap:1rem' },
-        el('button', { class: 'big-btn', onclick: check }, 'Enter'),
-        el('button', { class: 'big-btn secondary', onclick: showWho }, 'Cancel')),
-    ),
-  );
-  input.focus();
+  askGrownUp('Grown-ups only').then(ok => (ok ? showParent() : showWho()));
 }
 
 function showParent() {
@@ -176,14 +188,30 @@ function showParent() {
       el('button', { class: 'icon-btn', 'aria-label': 'Done', onclick: () => { saveState(state); showWho(); } }, '✅'),
       el('h1', {}, 'Parent area'),
     ),
-    el('p', { class: 'note' }, 'Change names, pictures and age groups. Changes save straight away. Progress is stored on this tablet only.'),
+    el('p', { class: 'note' }, 'Tap a picture to add a photo. Change names and age groups here too. Changes save straight away. Photos and progress stay on this tablet only.'),
     el('div', { class: 'parent-list' }, state.children.map(child => {
-      const avatarBtn = el('button', { class: 'avatar-btn', 'aria-label': 'Change picture' }, child.avatar);
-      avatarBtn.addEventListener('click', () => {
-        child.avatar = AVATARS[(AVATARS.indexOf(child.avatar) + 1) % AVATARS.length];
-        avatarBtn.textContent = child.avatar;
-        saveState(state);
+      // Tap the picture to choose a photo (camera or gallery).
+      const file = el('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+      const avatarBtn = el('button', { class: 'avatar-btn', 'aria-label': 'Choose a photo', onclick: () => file.click() }, avatarEl(child));
+      file.addEventListener('change', async () => {
+        if (!file.files[0]) return;
+        const old = child.photo;
+        try {
+          child.photo = await photoToDataUrl(file.files[0]);
+          saveState(state);
+          showParent();
+        } catch {
+          child.photo = old;
+          toast('Sorry, that photo didn’t work. Try another one.', 2500);
+        }
       });
+      // Or use an emoji: each tap shows the next one, and removes the photo.
+      const emojiBtn = el('button', { class: 'big-btn secondary small-btn', onclick: () => {
+        if (child.photo) delete child.photo;
+        else child.avatar = AVATARS[(AVATARS.indexOf(child.avatar) + 1) % AVATARS.length];
+        saveState(state);
+        showParent();
+      } }, child.photo ? 'Use emoji' : `Next emoji`);
       const name = el('input', { value: child.name, maxlength: 20, 'aria-label': 'Name' });
       name.addEventListener('input', () => { child.name = name.value.trim() || 'Child'; saveState(state); });
       const band = el('select', { 'aria-label': 'Age group' },
@@ -194,14 +222,44 @@ function showParent() {
         }));
       band.addEventListener('change', () => { child.band = band.value; saveState(state); });
       return el('div', { class: 'parent-row' },
-        avatarBtn, name, band, el('span', { class: 'note' }, `⭐ ${child.stars}`));
+        avatarBtn, file, name, band, emojiBtn, el('span', { class: 'note' }, `⭐ ${child.stars}`));
     })),
+    pinPanel(),
     voicePanel(),
     el('div', {},
       el('button', { class: 'big-btn secondary', onclick: () => {
         if (confirmReset()) { resetState(); state = loadState(); showParent(); }
       } }, 'Reset all progress')),
   );
+}
+
+/* Parent PIN: set, change or remove the 4-digit PIN for the parent area. */
+function pinPanel() {
+  const choose = () => {
+    let first = null;
+    let overlay;
+    const box = pinPad('Enter a new 4-digit PIN', async pin => {
+      if (!first) { first = pin; box.setMessage('Enter the same PIN again'); return false; }
+      if (pin !== first) { first = null; box.setMessage('They didn’t match. Enter a new 4-digit PIN'); return false; }
+      await setPin(pin);
+      overlay.remove();
+      toast('PIN saved', 2000);
+      showParent();
+      return true;
+    }, () => overlay.remove());
+    overlay = el('div', { class: 'overlay' }, box);
+    document.body.append(overlay);
+  };
+  return el('div', { class: 'parent-row', style: 'flex-direction:column;align-items:stretch' },
+    el('strong', { style: 'font-size:1.4rem' }, '🔒 Parent PIN'),
+    el('p', { class: 'note', style: 'margin:0' }, hasPin()
+      ? 'A PIN is set. It is needed to open this area and to give surah badges.'
+      : 'No PIN yet, so a times-tables question is used instead. Set a PIN to keep the older kids out.'),
+    el('div', { class: 'row', style: 'justify-content:flex-start' },
+      el('button', { class: 'big-btn small-btn', onclick: choose }, hasPin() ? 'Change PIN' : 'Set PIN'),
+      hasPin() ? el('button', { class: 'big-btn secondary small-btn', onclick: () => {
+        if (confirmReset('Tap again to remove the PIN')) { clearPin(); toast('PIN removed', 2000); showParent(); }
+      } }, 'Remove PIN') : null));
 }
 
 /* Voice settings: pick any English voice on the tablet, plus speed and pitch. */
@@ -246,15 +304,26 @@ function voicePanel() {
 /* A two-tap reset, so nobody wipes the stars by accident.
    (Avoids a browser pop-up, which can freeze a kiosk-style tablet app.) */
 let resetArmed = 0;
-function confirmReset() {
-  if (Date.now() - resetArmed < 4000) return true;
+function confirmReset(message = 'Tap again to reset everything') {
+  if (Date.now() - resetArmed < 4000) { resetArmed = 0; return true; }
   resetArmed = Date.now();
-  toast('Tap again to reset everything');
+  toast(message, 2500);
   return false;
 }
 
 function findChild(id) {
   return state.children.find(c => c.id === id);
 }
+
+/* Forgot the PIN? Open the app with #forgot-pin on the end of the address.
+   That removes the PIN. Stars and photos are kept. */
+function checkForgotPin() {
+  if (location.hash !== '#forgot-pin') return;
+  history.replaceState(null, '', location.pathname);
+  clearPin();
+  toast('PIN removed. Set a new one in the parent area.', 3500);
+}
+checkForgotPin();
+window.addEventListener('hashchange', checkForgotPin);
 
 showWho();
