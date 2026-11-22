@@ -35,7 +35,7 @@ export default {
         options: [flagOf(id), ...shuffle(ids.filter(x => x !== id)).slice(0, 2).map(flagOf)],
         answer: flagOf(id),
         optionClass: 'flag-option',
-        explain: `That is the flag of ${nameOf(id)}.`,
+        explain: `That is ${nameOf(id)}.`,
       }));
     } else {
       const max = band === 'champion' ? 3 : 2;
@@ -46,7 +46,7 @@ export default {
         : shuffle(ids).slice(0, 10);
       questions = chosen.map((id, i) => {
         const others = shuffle(ids.filter(x => x !== id)).slice(0, n - 1);
-        const fact = FACTS[id]?.fact;
+        const fact = `That is ${nameOf(id)}.`;
         if (band === 'champion' && i % 3 === 2) {
           return {
             prompt: `Which is the flag of ${nameOf(id)}?`,

@@ -20,13 +20,11 @@ const ROUNDS = { little: 5, explorer: 6, champion: 8 };
 const MAX_LEVEL = { little: 1, explorer: 2, champion: 3 };
 
 /* What we say about a country when it is tapped. */
-export function aboutCountry(c, band) {
-  const lines = [c.name];
+export function aboutCountry(c) {
   const f = FACTS[c.id];
-  if (band !== 'little' && c.capital) lines.push(`The capital city is ${c.capital}.`);
-  if (f) lines.push(f.fact);
-  else if (band !== 'little' && CONTINENTS[c.cont]) lines.push(`It is in ${CONTINENTS[c.cont]}.`);
-  return lines;
+  // One line per country, so it can be a single recorded clip.
+  if (f) return `${c.name}. The capital city is ${c.capital}. ${f.fact}`;
+  return [`${c.name}.`, c.capital ? `The capital city is ${c.capital}.` : null, CONTINENTS[c.cont] ? `It is in ${CONTINENTS[c.cont]}.` : null];
 }
 
 export default {
@@ -91,7 +89,7 @@ export default {
           band !== 'little' && c.capital ? el('p', {}, `🏙️ Capital: ${c.capital}`) : null,
           CONTINENTS[c.cont] ? el('p', {}, `🧭 Continent: ${CONTINENTS[c.cont]}`) : null,
           f ? el('p', { class: 'fact' }, `${f.pic} ${f.fact}`) : null].filter(Boolean));
-        speak(aboutCountry(c, band));
+        speak(aboutCountry(c));
       }
     }
 
@@ -138,7 +136,7 @@ export default {
           toast(`${praise} ${c.flag}`);
           round++;
           globe.spinTo(want);
-          speakThen([`${praise} That is ${c.name}.`, f?.fact], 1500).then(() => {
+          speakThen([praise, `That is ${c.name}.`], 1500).then(() => {
             if (!root.isConnected) return;
             if (round < rounds.length) next();
             else ctx.finish(mistakes <= rounds.length / 2 ? 3 : 2, 'You are a globe expert!');

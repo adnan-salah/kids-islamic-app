@@ -212,7 +212,7 @@ function showLevels(childId) {
       el('div', { class: 'sticker-grid small' }, TREASURES.map(t =>
         el('div', { class: `sticker ${found.includes(t) ? '' : 'locked'}` }, found.includes(t) ? t : '❔')))),
   );
-  speak([`You are on level ${level}!`, `${toNext} more stars to the next level.`]);
+  speak('Here are your levels! Keep earning stars to level up.');
 }
 
 /* ---------- Real-life reward ----------
@@ -348,7 +348,7 @@ function showDone(childId, gameId, stars, message, lv = {}, before = 0) {
   const ready = chestReady(child);
   sfx.win();
   setTimeout(() => confetti(), 150);
-  speak([praise, message, `You got ${stars} stars.`,
+  speak([praise, message, `You got ${stars} star${stars === 1 ? '' : 's'}.`,
     lv.levelUp ? `Level up! You are now on level ${lv.levelUp}!` : null,
     lv.newTier ? 'You earned a real reward!' : null,
     ready ? 'The treasure chest is ready! Tap it to open.' : null]);
