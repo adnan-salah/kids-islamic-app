@@ -33,21 +33,90 @@ function avatarEl(child, cls = 'emoji') {
     : el('span', { class: cls }, child.avatar);
 }
 
-/* Shrink a chosen photo to a small square, so it fits in tablet storage.
+/* Let the parent frame a chosen photo: drag to move, pinch or use the
+   slider to zoom, then save it as a small square (so it fits in tablet
+   storage). Resolves with the picture, or null if they cancel.
    The photo stays on this tablet only. It is never uploaded anywhere. */
-function photoToDataUrl(file, size = 320) {
+function cropPhoto(file, size = 320) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => {
-      const side = Math.min(img.width, img.height);
-      const canvas = el('canvas', { width: size, height: size });
-      canvas.getContext('2d').drawImage(img,
-        (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
-    };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.onload = () => {
+      const W = img.naturalWidth, H = img.naturalHeight;
+      const view = el('div', { class: 'crop-view' });
+      const pic = el('img', { class: 'crop-img', src: url, alt: '', draggable: 'false' });
+      view.append(pic, el('div', { class: 'crop-ring' }));
+      const slider = el('input', { type: 'range', min: '1', max: '4', step: '0.01', value: '1', class: 'crop-zoom', 'aria-label': 'Zoom' });
+      let V = 0, zoom = 1, ox = 0, oy = 0;
+      const scale = () => (V / Math.min(W, H)) * zoom;
+      function clamp() {
+        const s = scale();
+        ox = Math.min(0, Math.max(V - W * s, ox));
+        oy = Math.min(0, Math.max(V - H * s, oy));
+      }
+      function draw() {
+        clamp();
+        const s = scale();
+        pic.style.width = `${W * s}px`;
+        pic.style.height = `${H * s}px`;
+        pic.style.transform = `translate(${ox}px, ${oy}px)`;
+      }
+      // Zoom around a point in the frame (the centre, or between two fingers).
+      function zoomTo(z, cx = V / 2, cy = V / 2) {
+        const s0 = scale();
+        zoom = Math.min(4, Math.max(1, z));
+        const s1 = scale();
+        ox = cx - (cx - ox) * (s1 / s0);
+        oy = cy - (cy - oy) * (s1 / s0);
+        slider.value = String(zoom);
+        draw();
+      }
+      slider.addEventListener('input', () => zoomTo(Number(slider.value)));
+      const pts = new Map();
+      let pinch = null;
+      view.addEventListener('pointerdown', e => { view.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch = null; });
+      view.addEventListener('pointermove', e => {
+        const prev = pts.get(e.pointerId);
+        if (!prev) return;
+        const now = { x: e.clientX, y: e.clientY };
+        pts.set(e.pointerId, now);
+        if (pts.size === 1) { ox += now.x - prev.x; oy += now.y - prev.y; draw(); return; }
+        const [a, b] = [...pts.values()];
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        const r = view.getBoundingClientRect();
+        const mid = { x: (a.x + b.x) / 2 - r.left, y: (a.y + b.y) / 2 - r.top };
+        if (pinch) zoomTo(pinch.zoom * dist / pinch.dist, mid.x, mid.y);
+        else pinch = { dist, zoom };
+      });
+      const up = e => { pts.delete(e.pointerId); pinch = null; };
+      view.addEventListener('pointerup', up);
+      view.addEventListener('pointercancel', up);
+      view.addEventListener('wheel', e => { e.preventDefault(); zoomTo(zoom * (e.deltaY < 0 ? 1.1 : 0.9)); }, { passive: false });
+
+      const close = result => { overlay.remove(); URL.revokeObjectURL(url); resolve(result); };
+      const overlay = el('div', { class: 'crop-overlay' },
+        el('div', { class: 'crop-box' },
+          el('h2', {}, 'Move and zoom the photo'),
+          el('p', { class: 'note' }, 'Drag to move. Pinch or use the slider to zoom.'),
+          view,
+          el('div', { class: 'crop-zoom-row' }, el('span', {}, '➖'), slider, el('span', {}, '➕')),
+          el('div', { class: 'row' },
+            el('button', { class: 'big-btn secondary', onclick: () => close(null) }, 'Cancel'),
+            el('button', { class: 'big-btn', onclick: () => {
+              const s = scale();
+              const canvas = el('canvas', { width: size, height: size });
+              canvas.getContext('2d').drawImage(img, -ox / s, -oy / s, V / s, V / s, 0, 0, size, size);
+              close(canvas.toDataURL('image/jpeg', 0.85));
+            } }, '✅ Use photo'))));
+      document.body.append(overlay);
+      requestAnimationFrame(() => {
+        V = view.clientWidth;
+        const s = scale();
+        ox = (V - W * s) / 2; oy = (V - H * s) / 2;
+        draw();
+      });
+    };
     img.src = url;
   });
 }
@@ -298,11 +367,21 @@ function playGame(childId, gameId) {
   usePraise(subject.id === 'islam');
   const root = el('div', { class: 'stage' });
   let finished = false;
+  // Hearts: the older children get 3 tries per game; the 3-year-old never loses.
+  lives = child.band !== 'little' && !game.noLives
+    ? { left: MAX_LIVES, box: el('div', { class: 'hearts', 'aria-label': `${MAX_LIVES} hearts` }), lose: () => {
+        if (finished) return;
+        finished = true;
+        showLost(childId, gameId);
+      } }
+    : null;
+  if (lives) drawHearts();
 
   app.replaceChildren(...[
     el('div', { class: 'topbar' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; stopSpeech(); showSubject(childId, subject.id); } }, '⬅️'),
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; lives = null; stopSpeech(); showSubject(childId, subject.id); } }, '⬅️'),
       el('h1', { class: 'game-title' }, `${game.emoji} ${game.title}`),
+      lives ? lives.box : null,
     ),
     root,
     game.noBuddy ? null : buddy(),
@@ -316,6 +395,7 @@ function playGame(childId, gameId) {
     finish(stars, message) {
       if (finished) return; // child left the game early
       finished = true;
+      lives = null;
       // Save progress: add the stars, remember the best score for this game.
       const before = child.stars;
       child.stars += stars;
@@ -332,6 +412,46 @@ function playGame(childId, gameId) {
   });
 }
 
+/* ---------- Hearts (older children only) ----------
+   Every wrong answer in any game plays sfx.tryAgain(), which sends a
+   'kasem' event with 'wrong'. Here that costs a heart. Three wrong
+   answers and the game is lost, so the child starts it again. */
+const MAX_LIVES = 3;
+let lives = null;
+function drawHearts() {
+  if (!lives) return;
+  lives.box.replaceChildren(...Array.from({ length: MAX_LIVES }, (_, i) =>
+    el('span', { class: i < lives.left ? 'heart' : 'heart gone' }, '❤️')));
+  lives.box.setAttribute('aria-label', `${lives.left} hearts left`);
+}
+document.addEventListener('kasem', e => {
+  if (e.detail !== 'wrong' || !lives || !lives.box.isConnected) return;
+  lives.left--;
+  drawHearts();
+  lives.box.classList.remove('hurt'); void lives.box.offsetWidth; lives.box.classList.add('hurt');
+  if (lives.left <= 0) {
+    const lose = lives.lose;
+    lives = null;
+    setTimeout(lose, 900);
+  }
+});
+
+function showLost(childId, gameId) {
+  window.scrollTo(0, 0);
+  const subject = subjectOf(gameId);
+  stopSpeech();
+  app.replaceChildren(
+    el('div', { class: 'done-screen lost-screen' },
+      kasem('oops', 'big-kasem jump-in'),
+      el('h2', {}, 'Out of hearts!'),
+      el('div', { class: 'stars' }, [1, 2, 3].map(() => el('span', { class: 'dim' }, '💔'))),
+      el('p', { class: 'done-msg' }, 'Three wrong answers. Take your time and try again!'),
+      el('div', { class: 'row' },
+        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, '🔁 Try again'),
+        el('button', { class: 'big-btn secondary', onclick: () => showSubject(childId, subject.id) }, 'More games'))));
+  speak('Out of hearts! Take your time and try again.');
+}
+
 /* Maths can be set harder per child in the parent area, since the
    6 and 7 year olds share a band but not the same maths level.
    'harder' = Explorer+ questions, 'champion' = the Champions' maths. */
@@ -342,6 +462,7 @@ function mathsBand(child, subject) {
 
 /* ---------- Screen 4: Well done! ---------- */
 function showDone(childId, gameId, stars, message, lv = {}, before = 0) {
+  window.scrollTo(0, 0);
   const child = findChild(childId);
   const subject = subjectOf(gameId);
   const praise = pick(subject.id === 'islam' ? ['MashaAllah!', 'Well done!', 'Great job!'] : ['Well done!', 'Great job!', 'Amazing!']);
@@ -419,7 +540,10 @@ function showParent() {
         if (!file.files[0]) return;
         const old = child.photo;
         try {
-          child.photo = await photoToDataUrl(file.files[0]);
+          const picked = await cropPhoto(file.files[0]);
+          file.value = '';
+          if (!picked) return; // cancelled: keep the old picture
+          child.photo = picked;
           saveState(state);
           showParent();
         } catch {
@@ -578,4 +702,30 @@ function checkForgotPin() {
 checkForgotPin();
 window.addEventListener('hashchange', checkForgotPin);
 
-showWho();
+/* ---------- Opening screen ----------
+   Tablets only allow sound after the first tap, so the app opens on
+   an animated welcome with one big button. The tap plays Noor
+   Learning's own little jingle and Kasem says salam. */
+function showSplash() {
+  setBg('home');
+  const title = 'Noor Learning'.split('').map((ch, i) =>
+    el('span', { class: 'splash-letter', style: `animation-delay:${0.5 + i * 0.06}s` }, ch === ' ' ? '\u00a0' : ch));
+  const go = el('button', { class: 'big-btn splash-go', 'aria-label': 'Start' }, '▶ Play');
+  const screen = el('div', { class: 'splash', onclick: start },
+    el('div', { class: 'splash-sparkles' }, Array.from({ length: 14 }, (_, i) =>
+      el('span', { style: `left:${(i * 37) % 100}%;top:${(i * 53) % 90}%;animation-delay:${(i % 7) * 0.4}s` }, i % 3 ? '✨' : '⭐'))),
+    kasem('hi', 'splash-kasem'),
+    el('h1', { class: 'splash-title' }, title),
+    go);
+  app.replaceChildren(screen);
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    sfx.intro();
+    screen.classList.add('leaving');
+    setTimeout(() => { showWho(); speak('Assalamu alaikum! Who’s playing today?'); }, 900);
+  }
+}
+
+showSplash();

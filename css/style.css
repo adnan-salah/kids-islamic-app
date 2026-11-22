@@ -739,3 +739,53 @@ body[data-bg] { background-attachment: fixed; background-size: cover; background
 .option { transition: transform .15s; }
 .option.right { animation: rightPop .5s cubic-bezier(.3, 1.8, .5, 1); }
 @keyframes rightPop { 40% { transform: scale(1.08); } }
+
+/* ---------- End screens fit on one screen (no scrolling) ---------- */
+.done-screen {
+  min-height: 0; height: 100dvh; box-sizing: border-box; overflow: hidden;
+  padding: 1.5vh 1rem; gap: clamp(.35rem, 1.6vh, 1.2rem); justify-content: center;
+}
+.done-screen .big-kasem { width: auto; height: clamp(5rem, 19vh, 13rem); }
+.done-screen h2 { font-size: clamp(2rem, 5.5vh, 3rem); }
+.done-screen .stars { font-size: clamp(2.6rem, 8vh, 5rem); line-height: 1; }
+.done-screen .done-msg { font-size: clamp(1.2rem, 3.2vh, 1.8rem); }
+.done-screen .big-note { font-size: clamp(1rem, 2.6vh, 1.4rem); margin: 0; }
+.done-screen .done-level { font-size: clamp(1rem, 2.4vh, 1.3rem); }
+.done-screen .chest-btn.small img { width: auto; height: clamp(3.5rem, 11vh, 8rem); }
+.done-screen .chest-btn.small span { font-size: clamp(1.1rem, 2.6vh, 1.5rem); }
+.done-screen .reward-btn { padding-block: .5rem; }
+.done-screen .row .big-btn { font-size: clamp(1.4rem, 3.6vh, 2rem); padding: clamp(.6rem, 1.8vh, 1rem) clamp(1.4rem, 3vw, 2.4rem); }
+
+/* ---------- Hearts (older children) ---------- */
+.hearts { margin-left: auto; display: flex; gap: .2rem; font-size: 2rem; background: #ffffffd0; border-radius: 999px; padding: .2rem .7rem; }
+.hearts .heart { transition: transform .3s, filter .3s, opacity .3s; }
+.hearts .heart.gone { filter: grayscale(1); opacity: .3; transform: scale(.75); }
+.hearts.hurt { animation: buddyShake .5s; }
+
+/* ---------- Opening screen ---------- */
+.splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(.6rem, 2.5vh, 1.6rem); cursor: pointer; overflow: hidden; }
+.splash-kasem { height: clamp(10rem, 42vh, 26rem); width: auto; animation: splashIn 1s cubic-bezier(.3, 1.6, .5, 1) backwards, bob 2.6s 1s ease-in-out infinite; }
+@keyframes splashIn { from { transform: translateY(60vh) scale(.3) rotate(-20deg); opacity: 0; } }
+.splash-title { margin: 0; font-size: clamp(3rem, 9vh, 6rem); color: var(--teal); text-shadow: 0 4px 0 #fff, 0 0 18px #fff; white-space: nowrap; }
+.splash-letter { display: inline-block; animation: letterDrop .7s cubic-bezier(.3, 1.8, .5, 1) backwards, letterWave 2.4s 1.6s ease-in-out infinite; }
+@keyframes letterDrop { from { transform: translateY(-50vh); opacity: 0; } }
+@keyframes letterWave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.12em); } }
+.splash-go { font-size: clamp(1.8rem, 5vh, 2.6rem); padding: .8rem 3rem; animation: popIn .6s 1.4s backwards, pulse 1.4s 2s ease-in-out infinite; }
+@keyframes popIn { from { transform: scale(0); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+.splash-sparkles span { position: absolute; font-size: clamp(1.2rem, 3vh, 2rem); animation: twinkle 2.8s ease-in-out infinite; opacity: 0; }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1.1); } }
+.splash.leaving .splash-kasem { animation: splashOut .8s ease-in forwards; }
+.splash.leaving .splash-title, .splash.leaving .splash-go { transition: opacity .5s; opacity: 0; }
+@keyframes splashOut { to { transform: translateY(-70vh) scale(1.2) rotate(10deg); opacity: 0; } }
+
+/* ---------- Photo cropper (parent area) ---------- */
+.crop-overlay { position: fixed; inset: 0; z-index: 100; background: #0009; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.crop-box { background: #fff; border-radius: 28px; padding: 1.2rem 1.5rem; display: flex; flex-direction: column; align-items: center; gap: .7rem; max-height: 100%; box-sizing: border-box; }
+.crop-box h2 { margin: 0; color: var(--teal); font-size: 1.8rem; }
+.crop-box .note { margin: 0; }
+.crop-view { position: relative; width: min(70vw, 52vh); aspect-ratio: 1; overflow: hidden; border-radius: 20px; background: #222; touch-action: none; cursor: grab; }
+.crop-img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; user-select: none; pointer-events: none; }
+.crop-ring { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 999px #0007; border: 3px solid #fff; pointer-events: none; }
+.crop-zoom-row { display: flex; align-items: center; gap: .6rem; width: min(70vw, 52vh); font-size: 1.4rem; }
+.crop-zoom { flex: 1; height: 2rem; accent-color: var(--teal); }

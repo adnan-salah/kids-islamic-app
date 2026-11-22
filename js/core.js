@@ -196,6 +196,13 @@ export const sfx = {
   pop()     { slide(900, 1800, 0.08, 'square', 0.06); tone(1400, 0.03, 0.12, 'sine', 0.08); },
   whoosh()  { slide(300, 1200, 0.35, 'sawtooth', 0.04); },
   chest()   { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, i * 0.09, 0.5, 'triangle', 0.12)); },
+  // Noor Learning's own opening jingle: a bright rising chime that lands on a sparkle.
+  intro()   {
+    [[523, 0], [659, .12], [784, .24], [1047, .36], [988, .56], [1175, .68], [1568, .86]].forEach(([f, t], i) =>
+      tone(f, t, i === 6 ? 1.1 : 0.45, 'triangle', 0.13));
+    [2093, 2637, 3136].forEach((f, i) => tone(f, 1.0 + i * 0.07, 0.6, 'sine', 0.05));
+    slide(400, 1600, 0.5, 'sine', 0.05);
+  },
   boing()   { slide(220, 520, 0.18, 'triangle', 0.12); },
 };
 
