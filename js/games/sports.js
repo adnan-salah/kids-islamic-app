@@ -6,8 +6,8 @@
                  Beat the rival car to the finish for 3 stars.
      Penalties - 5 penalty kicks. A right answer scores a goal.
    Two levels:
-     Normal - adding and taking away up to 20.
-     Turbo  - times tables, bigger sums and sharing (division).
+     Normal - Year 2-3: adding and taking away to 100, 2, 3, 5, 10 tables.
+     Turbo  - Year 4-6: all tables, 3-digit sums, sharing, 2-digit × 1-digit.
    Champions start on Turbo. Anyone can pick either level.
    Questions are made fresh every game, so they use the tablet voice.
    ========================================================= */
@@ -29,52 +29,29 @@ function choices(answer, spread = 3, min = 0) {
   return shuffle([...set]).map(String);
 }
 
+/* Normal: Year 2-3 (Explorers). */
 function normalQuestion() {
-  const kind = rand(1, 5);
-  if (kind === 1) {
-    const a = rand(2, 10), b = rand(1, 10);
-    return { q: `${a} + ${b} = ?`, answer: a + b };
-  }
-  if (kind === 2) {
-    const a = rand(6, 20), b = rand(1, a - 1);
-    return { q: `${a} − ${b} = ?`, answer: a - b };
-  }
-  if (kind === 3) {
-    const a = rand(1, 6), b = rand(1, 6);
-    return { q: `Your team scores ${a} goals, then ${b} more. How many goals?`, answer: a + b };
-  }
-  if (kind === 4) {
-    const a = rand(5, 15), b = rand(1, 4);
-    return { q: `A race has ${a} laps. You have done ${b}. How many laps are left?`, answer: a - b };
-  }
-  const a = rand(3, 9), b = rand(2, 9);
-  return { q: `There are ${a} red cars and ${b} blue cars. How many cars?`, answer: a + b };
+  const kind = rand(1, 6);
+  if (kind === 1) { const a = rand(15, 60), b = rand(11, 39); return { q: `${a} + ${b} = ?`, answer: a + b, spread: 10 }; }
+  if (kind === 2) { const a = rand(40, 99), b = rand(11, a - 10); return { q: `${a} − ${b} = ?`, answer: a - b, spread: 10 }; }
+  if (kind === 3) { const t = pick([2, 3, 5, 10]), n = rand(2, 12); return { q: `${n} × ${t} = ?`, answer: n * t, spread: 5 }; }
+  if (kind === 4) { const a = rand(8, 30), b = rand(5, 25); return { q: `Your team scores ${a} points, then ${b} more. How many points?`, answer: a + b, spread: 8 }; }
+  if (kind === 5) { const laps = rand(20, 60), done = rand(5, laps - 5); return { q: `A race has ${laps} laps. You have done ${done}. How many laps are left?`, answer: laps - done, spread: 8 }; }
+  const teams = rand(2, 6), size = pick([5, 10]);
+  return { q: `${teams} teams each have ${size} players. How many players?`, answer: teams * size, spread: 6 };
 }
 
+/* Turbo: Year 4-6 (Champions, or anyone who wants a challenge). */
 function turboQuestion() {
-  const kind = rand(1, 6);
-  if (kind === 1) {
-    const a = rand(2, 12), b = rand(2, 12);
-    return { q: `${a} × ${b} = ?`, answer: a * b, spread: 5 };
-  }
-  if (kind === 2) {
-    const a = rand(15, 60), b = rand(11, 39);
-    return { q: `${a} + ${b} = ?`, answer: a + b, spread: 10 };
-  }
-  if (kind === 3) {
-    const a = rand(40, 99), b = rand(11, a - 10);
-    return { q: `${a} − ${b} = ?`, answer: a - b, spread: 10 };
-  }
-  if (kind === 4) {
-    const laps = rand(3, 10), km = rand(2, 9);
-    return { q: `Each lap is ${km} km. How far is ${laps} laps?`, answer: laps * km, spread: 5 };
-  }
-  if (kind === 5) {
-    const players = pick([2, 3, 4, 5, 6]), each = rand(2, 10);
-    return { q: `${players * each} oranges are shared equally between ${players} players. How many each?`, answer: each, spread: 3 };
-  }
-  const teams = rand(2, 9), size = pick([5, 6, 7, 11]);
-  return { q: `${teams} teams each have ${size} players. How many players?`, answer: teams * size, spread: 6 };
+  const kind = rand(1, 7);
+  if (kind === 1) { const a = rand(3, 12), b = rand(6, 12); return { q: `${a} × ${b} = ?`, answer: a * b, spread: 8 }; }
+  if (kind === 2) { const a = rand(120, 680), b = rand(110, 299); return { q: `${a} + ${b} = ?`, answer: a + b, spread: 30 }; }
+  if (kind === 3) { const a = rand(400, 999), b = rand(110, a - 100); return { q: `${a} − ${b} = ?`, answer: a - b, spread: 30 }; }
+  if (kind === 4) { const laps = rand(12, 58), km = rand(3, 7); return { q: `Each lap is ${km} km. How far is ${laps} laps?`, answer: laps * km, spread: 15 }; }
+  if (kind === 5) { const players = pick([3, 4, 6, 8]), each = rand(6, 15); return { q: `${players * each} oranges are shared equally between ${players} players. How many each?`, answer: each, spread: 4 }; }
+  if (kind === 6) { const a = rand(13, 39), b = rand(3, 9); return { q: `${a} × ${b} = ?`, answer: a * b, spread: 15 }; }
+  const teams = rand(4, 12), size = 11;
+  return { q: `${teams} soccer teams each have ${size} players. How many players?`, answer: teams * size, spread: 11 };
 }
 
 export default {

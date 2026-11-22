@@ -426,6 +426,8 @@ button {
 .jig-tray { display: grid; gap: .6rem; width: min(40vw, 30rem); }
 .jig-tray.n3 { grid-template-columns: repeat(3, 1fr); }
 .jig-tray.n4 { grid-template-columns: repeat(4, 1fr); }
+.jig-tray.n5 { grid-template-columns: repeat(5, 1fr); gap: .4rem; }
+.jig-tray.n6 { grid-template-columns: repeat(6, 1fr); gap: .35rem; }
 .jig-piece { aspect-ratio: 1; border-radius: 8px; box-shadow: 0 3px 0 #0003; touch-action: none; cursor: grab; }
 .jig-piece.lifted { opacity: .25; }
 .jig-piece.placed { visibility: hidden; }
@@ -724,3 +726,14 @@ body[data-bg="geo"]     { background-image: linear-gradient(#fff3, #fff8), url(.
 .tile .badge-new { top: .4rem; right: .4rem; font-size: .95rem; }
 body[data-bg] { background-attachment: fixed; background-size: cover; background-position: center; }
 .done-screen .big-kasem { width: min(13rem, 24vh); }
+
+/* ---------- Fit games on one tablet screen ---------- */
+.stage { gap: 1rem; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.prompt { padding: .7rem 1.2rem; }
+.options:has(> :nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
+.question-pic { font-size: clamp(3rem, 9vh, 5rem); }
+.mem-grid { width: min(100%, var(--fitw, 44rem)); }
+.mem-card { max-height: none; font-size: clamp(2rem, 6vh, 3.6rem); }
+.option { transition: transform .15s; }
+.option.right { animation: rightPop .5s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes rightPop { 40% { transform: scale(1.08); } }

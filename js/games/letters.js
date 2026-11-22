@@ -2,6 +2,7 @@
    Game: Arabic Letter Match
    Teaches: the 28 Arabic letters, the first step to reading the Quran.
    Bands:
+     champion - read letters with short vowels (fatha, kasra, damma).
      little   - "Find the same shape": match a letter to its twin.
      explorer - see a letter, pick its name; then see a name, pick the letter.
    Letter names use simple English spellings children are usually taught.
@@ -26,14 +27,51 @@ function distractors(letter, count) {
   return shuffle(LETTERS.filter(l => l !== letter && !similarName(l))).slice(0, count);
 }
 
+/* Champions: the short vowels (harakat), the next step to reading Quran.
+   Fatha = a, kasra = i, damma = u. Letters chosen have clear sounds. */
+const HARAKAT = [
+  { mark: '\u064E', name: 'fatha', v: 'a' },
+  { mark: '\u0650', name: 'kasra', v: 'i' },
+  { mark: '\u064F', name: 'damma', v: 'u' },
+];
+const SOUNDS = { 'ب': 'b', 'ت': 't', 'د': 'd', 'ر': 'r', 'ز': 'z', 'س': 's', 'ف': 'f', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ج': 'j', 'ش': 'sh' };
+function harakatQuestions() {
+  const letters = shuffle(Object.keys(SOUNDS)).slice(0, 10);
+  return letters.map((c, i) => {
+    const h = HARAKAT[i % 3];
+    const say = SOUNDS[c] + h.v;
+    if (i % 2 === 0) {
+      return {
+        prompt: 'How do you read this?',
+        pic: c + h.mark, picClass: 'big-letter',
+        options: HARAKAT.map(x => SOUNDS[c] + x.v),
+        answer: say,
+        explain: `The ${h.name} makes the “${h.v}” sound: ${say}.`,
+      };
+    }
+    return {
+      prompt: `Which one says “${say}”?`,
+      options: HARAKAT.map(x => c + x.mark),
+      optionClass: 'letter',
+      answer: c + h.mark,
+      explain: `The ${h.name} makes the “${h.v}” sound.`,
+    };
+  });
+}
+
 export default {
   id: 'letters',
   title: 'Letter Match',
   emoji: '🔤',
-  bands: ['little', 'explorer'],
+  bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
     const { root, band } = ctx;
+    if (band === 'champion') {
+      runQuiz(root, harakatQuestions(), mistakes =>
+        ctx.finish(starsFrom(mistakes, band), 'You can read Arabic sounds!'));
+      return;
+    }
     const picks = shuffle(LETTERS).slice(0, band === 'little' ? 6 : 8);
 
     const questions = picks.map((letter, n) => {

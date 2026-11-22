@@ -29,10 +29,11 @@ import catchGame from './catch.js';
 import globe from './globe-game.js';
 import flags from './flags.js';
 import worldQuiz from './world-quiz.js';
+import grammar from './grammar.js';
 
 // The My games screen shows one section per subject, in this order.
 export const SUBJECTS = [
-  { id: 'english', name: 'English', emoji: '📚', games: [sounds, words] },
+  { id: 'english', name: 'English', emoji: '📚', games: [sounds, words, grammar] },
   { id: 'maths', name: 'Maths', emoji: '🔢', games: [maths, sports, clock] },
   { id: 'geo', name: 'Geography', emoji: '🌍', games: [globe, flags, worldQuiz] },
   { id: 'world', name: 'Science & nature', emoji: '🔬', games: [world] },

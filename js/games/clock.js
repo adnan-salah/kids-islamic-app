@@ -2,9 +2,10 @@
    Game: Time & Money
    Teaches: reading a clock, and counting Australian coins.
    Bands:
-     explorer - o'clock and half past; adding up 2 or 3 coins.
-     champion - quarter past/to and 5-minute times; bigger amounts
-                and working out change.
+     explorer - (Year 2-3) quarter past/to and 5-minute times;
+                adding up coins and working out change.
+     champion - (Year 5) 5-minute times, 24-hour time, how long
+                between two times, and change from $20 and $50.
    Questions are made fresh each game, so they use the tablet voice.
    ========================================================= */
 import { el, shuffle, pick } from '../core.js';
@@ -54,14 +55,45 @@ function timeWords(h, m) {
   return `${hourName(h)}:${String(m).padStart(2, '0')}`;
 }
 
+const hm = (h, m) => `${h}:${String(m).padStart(2, '0')}`;
+
+/* Champions: 24-hour time and how long between two times. */
+function champTimeQuestion() {
+  if (Math.random() < 0.5) {
+    const h = rand(13, 22), m = 5 * rand(0, 11);
+    const answer = `${hm(h - 12, m)} pm`;
+    return {
+      prompt: `A plane leaves at ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} (24-hour time). What is that in 12-hour time?`,
+      pic: '✈️',
+      options: shuffle([answer, `${hm(h - 10, m)} pm`, `${hm(h - 12, m)} am`]),
+      answer,
+      explain: `Take away 12 from the hours after midday: ${h} − 12 = ${h - 12}.`,
+    };
+  }
+  const h = rand(7, 14), m = 5 * rand(0, 11), len = 5 * rand(9, 30);
+  const end = h * 60 + m + len;
+  const fmt = mins => `${Math.floor(mins / 60)} h ${mins % 60} min`;
+  const answer = len >= 60 ? fmt(len) : `${len} min`;
+  const alt = d => (len + d >= 60 ? fmt(len + d) : `${len + d} min`);
+  const show = t => { const hh = Math.floor(t / 60), mm = t % 60; return `${hh > 12 ? hh - 12 : hh}:${String(mm).padStart(2, '0')}${hh >= 12 ? ' pm' : ' am'}`; };
+  return {
+    prompt: `The cricket starts at ${show(h * 60 + m)} and ends at ${show(end)}. How long does it last?`,
+    pic: '🏏',
+    options: shuffle([answer, alt(10), alt(-15)]),
+    answer,
+    explain: `From ${show(h * 60 + m)} to ${show(end)} is ${answer}.`,
+  };
+}
+
 function timeQuestion(band) {
+  if (band === 'champion' && Math.random() < 0.6) return champTimeQuestion();
   const h = rand(1, 12);
-  const m = band === 'champion' ? pick([0, 15, 30, 45, 5 * rand(1, 11)]) : pick([0, 30]);
+  const m = pick([0, 15, 30, 45, 5 * rand(1, 11), 5 * rand(1, 11)]);
   const answer = timeWords(h, m);
   const wrong = new Set();
   while (wrong.size < 2) {
     const wh = rand(1, 12);
-    const wm = band === 'champion' ? pick([0, 15, 30, 45, m]) : pick([0, 30]);
+    const wm = pick([0, 15, 30, 45, m, (m + 30) % 60]);
     const w = timeWords(wh, wm);
     if (w !== answer) wrong.add(w);
   }
@@ -86,9 +118,9 @@ function coinRow(coins) {
 }
 
 function moneyQuestion(band) {
-  if (band === 'champion' && Math.random() < 0.5) {
+  if (Math.random() < 0.5) {
     // Change from a note.
-    const note = pick([500, 1000]);
+    const note = band === 'champion' ? pick([2000, 5000]) : pick([500, 1000]);
     const price = 5 * rand(10, note / 5 - 10);
     const answer = note - price;
     const wrong = new Set();
@@ -101,8 +133,8 @@ function moneyQuestion(band) {
       explain: `${money(note)} take away ${money(price)} is ${money(answer)}.`,
     };
   }
-  const n = band === 'champion' ? rand(3, 5) : rand(2, 3);
-  const pool = band === 'champion' ? COINS : [10, 20, 50, 100, 200];
+  const n = band === 'champion' ? rand(5, 7) : rand(3, 5);
+  const pool = COINS;
   const coins = Array.from({ length: n }, () => pick(pool)).sort((a, b) => b - a);
   const total = coins.reduce((a, b) => a + b, 0);
   const wrong = new Set();
@@ -125,10 +157,10 @@ export default {
 
   start(ctx) {
     const { root } = ctx;
-    const band = ctx.harder ? 'champion' : ctx.band; // harder maths gets quarter-past times and more coins
+    const band = ctx.harder ? 'champion' : ctx.band; // harder maths gets the Champions' questions
     const questions = shuffle([
-      ...Array.from({ length: 4 }, () => timeQuestion(band)),
-      ...Array.from({ length: 4 }, () => moneyQuestion(band)),
+      ...Array.from({ length: 5 }, () => timeQuestion(band)),
+      ...Array.from({ length: 5 }, () => moneyQuestion(band)),
     ]);
     runQuiz(root, questions, mistakes =>
       ctx.finish(starsFrom(mistakes, band), 'You can tell the time and count money!'), { shuffleOptions: false });

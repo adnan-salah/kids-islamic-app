@@ -3,9 +3,9 @@
    Teaches: memory, focus and patience.
    Turn over two cards at a time to find the matching pairs.
    Bands:
-     little   - 3 pairs (6 cards).
-     explorer - 6 pairs (12 cards).
-     champion - 8 pairs (16 cards).
+     little   - 4 pairs (8 cards).
+     explorer - 8 pairs (16 cards).
+     champion - 10 pairs (20 cards).
    ========================================================= */
 import { el, speak, sfx, toast, shuffle, pick, PRAISE } from '../core.js';
 
@@ -19,7 +19,7 @@ export default {
 
   start(ctx) {
     const { root, band } = ctx;
-    const pairs = { little: 3, explorer: 6, champion: 8 }[band];
+    const pairs = { little: 4, explorer: 8, champion: 10 }[band];
     const pics = shuffle(PICTURES).slice(0, pairs);
     const deck = shuffle([...pics, ...pics]);
     let open = [], found = 0, turns = 0, busy = false;
@@ -31,12 +31,12 @@ export default {
       card.dataset.pic = pic;
       return card;
     });
-    const cols = deck.length <= 6 ? 3 : 4;
+    const cols = deck.length <= 6 ? 3 : deck.length > 16 ? 5 : 4;
     root.replaceChildren(
       el('div', { class: 'prompt' },
         el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak('Find the matching pairs!') }, '🔊'),
         el('p', {}, 'Find the matching pairs!')),
-      el('div', { class: 'mem-grid', style: `grid-template-columns:repeat(${cols},1fr)` }, cards));
+      el('div', { class: 'mem-grid', style: `grid-template-columns:repeat(${cols},1fr);--fitw:calc((100vh - 15rem) * ${cols / Math.ceil(deck.length / cols)})` }, cards));
     speak('Find the matching pairs!');
 
     function flip(card) {

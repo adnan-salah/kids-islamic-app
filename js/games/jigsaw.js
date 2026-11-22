@@ -5,7 +5,8 @@
    A faint copy of the picture shows where each piece goes.
    Bands:
      little   - 9 pieces (3 x 3).
-     explorer - 16 pieces (4 x 4).
+     explorer - 25 pieces (5 x 5).
+     champion - 36 pieces (6 x 6).
    The pictures are original cartoons, made for this app,
    saved in img/puzzles/.
    ========================================================= */
@@ -31,11 +32,11 @@ export default {
   id: 'jigsaw',
   title: 'Jigsaw Fun',
   emoji: '🧩',
-  bands: ['little', 'explorer'],
+  bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
     const { root, band } = ctx;
-    const N = band === 'little' ? 3 : 4;
+    const N = { little: 3, explorer: 5, champion: 6 }[band];
     menu();
 
     function menu() {

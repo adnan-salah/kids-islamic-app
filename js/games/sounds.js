@@ -3,8 +3,9 @@
    Teaches: the English alphabet, first sounds and rhyming
    (early reading skills).
    Bands:
-     little   - "Which one starts with B?" (2 pictures).
-     explorer - first letters and rhyming words (3 choices).
+     little   - "Which one starts with B?" and "what letter does it start with?" (3 pictures).
+     explorer - (Year 2-3 phonics) sounds like sh, ch, th and ee,
+                counting syllables, and rhyming words.
    ========================================================= */
 import { shuffle, pick } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
@@ -66,6 +67,45 @@ function rhyme() {
   };
 }
 
+/* Year 2-3 phonics: words with a sound in them, and words without. */
+const DIGRAPHS = [
+  { sound: 'sh', yes: [['ship', '🚢'], ['fish', '🐟'], ['shell', '🐚'], ['shoe', '👟']], no: [['cat', '🐱'], ['dog', '🐶'], ['sun', '☀️'], ['pen', '🖊️']] },
+  { sound: 'ch', yes: [['chair', '🪑'], ['cheese', '🧀'], ['chick', '🐤'], ['peach', '🍑']], no: [['bed', '🛏️'], ['frog', '🐸'], ['kite', '🪁'], ['hat', '🎩']] },
+  { sound: 'th', yes: [['three', '3️⃣'], ['thumb', '👍'], ['bath', '🛁'], ['tooth', '🦷']], no: [['bus', '🚌'], ['leaf', '🍃'], ['map', '🗺️'], ['cup', '🥤']] },
+  { sound: 'ee', yes: [['tree', '🌳'], ['bee', '🐝'], ['sheep', '🐑'], ['feet', '🦶']], no: [['car', '🚗'], ['box', '📦'], ['moon', '🌙'], ['log', '🪵']] },
+  { sound: 'oo', yes: [['moon', '🌙'], ['spoon', '🥄'], ['boot', '🥾'], ['pool', '🏊']], no: [['tree', '🌳'], ['hat', '🎩'], ['fish', '🐟'], ['cake', '🎂']] },
+  { sound: 'ai', yes: [['rain', '🌧️'], ['snail', '🐌'], ['train', '🚆'], ['tail', '🐒']], no: [['dog', '🐶'], ['bus', '🚌'], ['bee', '🐝'], ['star', '⭐']] },
+];
+const SYLLABLES = [['cat', 1, '🐱'], ['rabbit', 2, '🐰'], ['banana', 3, '🍌'], ['elephant', 3, '🐘'], ['butterfly', 3, '🦋'], ['tiger', 2, '🐯'],
+  ['caterpillar', 4, '🐛'], ['kangaroo', 3, '🦘'], ['watermelon', 4, '🍉'], ['dog', 1, '🐶'], ['pencil', 2, '✏️'], ['helicopter', 4, '🚁'], ['crocodile', 3, '🐊']];
+
+function hasSound() {
+  const d = pick(DIGRAPHS);
+  const right = pick(d.yes);
+  const wrong = shuffle(d.no).slice(0, 2);
+  const label = w => `${w[1]} ${w[0]}`;
+  return {
+    prompt: `Which word has the “${d.sound}” sound?`,
+    say: `Which word has the ${d.sound} sound?`,
+    pic: d.sound, picClass: 'abc-big',
+    options: [right, ...wrong].map(label), optionClass: 'pic-opt',
+    answer: label(right),
+    explain: `${right[0]} has the ${d.sound} sound.`,
+  };
+}
+
+function syllables() {
+  const [word, n, emoji] = pick(SYLLABLES);
+  return {
+    prompt: `Clap it out! How many syllables (beats) in “${word}”?`,
+    say: `Clap it out! How many beats in ${word}?`,
+    pic: emoji,
+    options: ['1', '2', '3', '4'],
+    answer: String(n),
+    explain: `${word} has ${n} beat${n > 1 ? 's' : ''}.`,
+  };
+}
+
 export default {
   id: 'sounds',
   title: 'Sounds & Rhymes',
@@ -75,8 +115,8 @@ export default {
   start(ctx) {
     const { root, band } = ctx;
     const questions = band === 'little'
-      ? Array.from({ length: 5 }, () => startsWith(2))
-      : shuffle([startsWith(3), startsWith(3), firstLetter(), firstLetter(), rhyme(), rhyme()]);
+      ? shuffle([startsWith(3), startsWith(3), startsWith(3), startsWith(3), firstLetter(), firstLetter()])
+      : shuffle([hasSound(), hasSound(), hasSound(), syllables(), syllables(), rhyme(), rhyme(), firstLetter()]);
     runQuiz(root, questions, mistakes =>
       ctx.finish(starsFrom(mistakes, band), 'You know your sounds and rhymes!'));
   },

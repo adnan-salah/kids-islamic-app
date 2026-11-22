@@ -2,18 +2,21 @@
    Game: Word Star
    Teaches: spelling, sentences and reading comprehension.
    Bands:
-     explorer - spell 5 short words from letter tiles (picture clue).
-     champion - spell 3 harder words (meaning clue), build 2 sentences,
-                then read a short story and answer 2 questions.
+     explorer - (Year 2-3) spell 3 two-syllable words (picture clue),
+                build a sentence, then read a short story and answer 2 questions.
+     champion - (Year 5) spell 4 tricky words (meaning clue, extra letters),
+                build 2 longer sentences, then read a story and answer
+                2 questions that need thinking (why, what does it mean).
    Australian spelling is used (neighbour, favourite).
    ========================================================= */
 import { el, speak, speakThen, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
 import { runQuiz } from '../quiz.js';
 
 export const EASY = [
-  ['cat', '🐱'], ['sun', '☀️'], ['moon', '🌙'], ['star', '⭐'], ['book', '📖'],
-  ['fish', '🐟'], ['ball', '⚽'], ['cake', '🎂'], ['tree', '🌳'], ['duck', '🦆'],
-  ['camel', '🐪'], ['apple', '🍎'], ['house', '🏠'], ['water', '💧'], ['happy', '😊'],
+  ['rabbit', '🐰'], ['pencil', '✏️'], ['rocket', '🚀'], ['monkey', '🐒'], ['turtle', '🐢'],
+  ['garden', '🌻'], ['window', '🪟'], ['planet', '🪐'], ['basket', '🧺'], ['kitten', '🐱'],
+  ['dragon', '🐉'], ['camel', '🐪'], ['spider', '🕷️'], ['carrot', '🥕'], ['button', '🔘'],
+  ['thunder', '⛈️'], ['chicken', '🐔'], ['football', '⚽'], ['rainbow', '🌈'], ['teacher', '🧑‍🏫'],
 ];
 
 export const HARD = [
@@ -29,9 +32,35 @@ export const HARD = [
   ['beautiful', 'Very lovely to look at.'],
   ['knowledge', 'What you learn and know.'],
   ['favourite', 'The one you like best.'],
+  ['necessary', 'Needed; you must have it.'],
+  ['environment', 'The world around us: air, water, land, plants and animals.'],
+  ['immediately', 'Straight away, right now.'],
+  ['separate', 'To keep apart.'],
+  ['temperature', 'How hot or cold something is.'],
+  ['curious', 'Wanting to find out about things.'],
+  ['ancient', 'Very, very old.'],
+  ['brilliant', 'Very bright, or very clever.'],
+  ['experiment', 'A test to find out what happens.'],
+  ['continent', 'One of the seven big areas of land on Earth.'],
+];
+/* Year 5 words for Champions (leaves out the first few easier ones). */
+const CHAMPION_WORDS = () => HARD.slice(4);
+
+/* Short sentences for Explorers. */
+export const SHORT_SENTENCES = [
+  'The cat sat on the warm mat.',
+  'My brother likes to play soccer.',
+  'We read a book every night.',
+  'The bird flew over the tall tree.',
+  'Koalas eat gum leaves.',
+  'I can count to one hundred.',
 ];
 
 export const SENTENCES = [
+  'After school we went to the beach and built a huge sandcastle.',
+  'The astronauts looked down at the blue planet from their spaceship.',
+  'Before the race, the drivers checked their tyres carefully.',
+  'My grandmother tells the most wonderful stories about her childhood.',
   'The dog ran across the big green park.',
   'Kindness is a beautiful thing.',
   'We say Bismillah before we eat.',
@@ -40,6 +69,38 @@ export const SENTENCES = [
   'I help my little sister every day.',
   'Bees make honey from flowers.',
   'We should always tell the truth.',
+];
+
+/* Longer stories for Champions, with questions that need thinking. */
+export const READING_HARD = [
+  {
+    text: 'The wind howled as Idris climbed the last rocky ridge. His legs ached and his water bottle was almost empty, but he could see the hut at the top. Grandpa had promised the view would be worth it. When Idris finally stood at the summit and saw the valley glowing gold in the sunset, he forgot all about his tired legs.',
+    questions: [
+      { q: 'How did Idris feel at the end?', options: ['Amazed and happy', 'Angry and bored', 'Scared and lost'], answer: 'Amazed and happy' },
+      { q: 'What does “summit” most likely mean?', options: ['The top of a mountain', 'A kind of hut', 'A deep valley'], answer: 'The top of a mountain' },
+    ],
+  },
+  {
+    text: 'Every Saturday, Amina’s team trained at the oval even when it rained. Their coach said, “Champions are made when nobody is watching.” At the grand final, the score was tied and the rain was pouring. Amina’s team kept running hard while the other team slowed down. They won by one goal.',
+    questions: [
+      { q: 'Why did Amina’s team win?', options: ['They had trained hard in the rain', 'The other team did not turn up', 'The coach scored a goal'], answer: 'They had trained hard in the rain' },
+      { q: 'What did the coach mean?', options: ['Practice you do on your own makes you great', 'Nobody should watch the game', 'Only play when people are watching'], answer: 'Practice you do on your own makes you great' },
+    ],
+  },
+  {
+    text: 'Long ago, scholars in Baghdad built a great library called the House of Wisdom. People came from far away to translate books about the stars, medicine and mathematics. Many ideas we use today, like the word “algebra”, came from the work of Muslim scholars there.',
+    questions: [
+      { q: 'What was the House of Wisdom?', options: ['A great library', 'A royal palace', 'A big market'], answer: 'A great library' },
+      { q: 'Which word comes from the scholars of Baghdad?', options: ['Algebra', 'Football', 'Kangaroo'], answer: 'Algebra' },
+    ],
+  },
+  {
+    text: 'Leila noticed that the plants on her windowsill leaned towards the glass. She turned the pots around, and a few days later they were leaning towards the window again. Leila wrote in her notebook: plants grow towards the light.',
+    questions: [
+      { q: 'Why did the plants lean towards the window?', options: ['To get more light', 'Because the pots were heavy', 'Because it was windy'], answer: 'To get more light' },
+      { q: 'What kind of person is Leila?', options: ['Curious, like a scientist', 'Lazy and careless', 'Angry and grumpy'], answer: 'Curious, like a scientist' },
+    ],
+  },
 ];
 
 export const READING = [
@@ -85,10 +146,12 @@ export default {
     const { root, band } = ctx;
     let mistakes = 0;
     const steps = band === 'champion'
-      ? [...shuffle(HARD).slice(0, 3).map(w => () => spell(w[0], null, w[1])),
+      ? [...shuffle(CHAMPION_WORDS()).slice(0, 4).map(w => () => spell(w[0], null, w[1])),
          ...shuffle(SENTENCES).slice(0, 2).map(s => () => sentence(s)),
-         () => reading(pick(READING))]
-      : shuffle(EASY).slice(0, 5).map(w => () => spell(w[0], w[1], null));
+         () => reading(pick(READING_HARD))]
+      : [...shuffle(EASY).slice(0, 3).map(w => () => spell(w[0], w[1], null)),
+         () => sentence(pick(SHORT_SENTENCES)),
+         () => reading(pick(READING))];
     let si = 0;
     steps[0]();
 
@@ -108,7 +171,8 @@ export default {
       const say = clue ? `Spell the word that means: ${clue}` : 'Spell the word!';
       const letters = [...word];
       const extras = band === 'champion'
-        ? shuffle([...LETTERS].filter(c => !letters.includes(c))).slice(0, 3) : [];
+        ? shuffle([...LETTERS].filter(c => !letters.includes(c))).slice(0, 4)
+        : shuffle([...LETTERS].filter(c => !letters.includes(c))).slice(0, 2);
       let at = 0;
       const slots = letters.map(() => el('span', { class: 'word-slot' }));
       const tiles = shuffle([...letters, ...extras]).map(c => {
