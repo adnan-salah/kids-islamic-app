@@ -1,0 +1,30 @@
+# Downloads voice clips listed in audio/clips.tsv (id <TAB> url) into audio/*.mp3
+# and commits them. Runs when clips.tsv changes. Used because the clips are
+# generated elsewhere and their download links expire after about a day.
+name: Fetch voice clips
+on:
+  push:
+    branches: [main]
+    paths: [audio/clips.tsv]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download clips
+        run: |
+          set -e
+          while IFS=$'\t' read -r id url; do
+            [ -z "$id" ] && continue
+            [ -f "audio/$id.mp3" ] && continue
+            curl -sSfL --retry 3 -o "audio/$id.mp3" "$url"
+          done < audio/clips.tsv
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audio/*.mp3
+          git diff --cached --quiet || git commit -m "Add downloaded voice clips"
+          git push
