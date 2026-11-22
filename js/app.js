@@ -11,6 +11,11 @@ let state = loadState();
 
 const AVATARS = ['🌙', '⭐', '🌸', '🐣', '🦋', '🐢', '🦁', '🐪', '🌻', '🚀', '🐱', '🌈'];
 
+/* Sticker book: one new sticker for every 10 stars. */
+const STICKERS = ['🕌', '🌙', '🌴', '🐪', '🏮', '🕋', '📖', '🌸', '🦋', '🌈', '🐎', '🌟'];
+const STARS_PER_STICKER = 10;
+const stickersFor = stars => Math.min(STICKERS.length, Math.floor(stars / STARS_PER_STICKER));
+
 /* ---------- Screen 1: Who's playing? ---------- */
 function showWho() {
   app.replaceChildren(
@@ -36,7 +41,7 @@ function showGames(childId) {
     el('div', { class: 'topbar' },
       el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: showWho }, '🏠'),
       el('h1', {}, `${child.avatar} ${child.name}`),
-      el('span', { class: 'star-count' }, `⭐ ${child.stars}`),
+      el('button', { class: 'star-count', onclick: () => showStickers(childId) }, `⭐ ${child.stars}  📒`),
     ),
     el('div', { class: 'tile-grid' }, games.map(game =>
       el('button', { class: 'tile', onclick: () => { sfx.tap(); playGame(childId, game.id); } },
@@ -52,6 +57,26 @@ function showGames(childId) {
 function starsFor(child, gameId) {
   const best = child.played[gameId]?.best || 0;
   return best ? '⭐'.repeat(best) : 'New!';
+}
+
+/* ---------- Sticker book ---------- */
+function showStickers(childId) {
+  const child = findChild(childId);
+  const have = stickersFor(child.stars);
+  const toNext = STARS_PER_STICKER - (child.stars % STARS_PER_STICKER);
+  const text = have >= STICKERS.length
+    ? 'MashaAllah! You collected every sticker!'
+    : `You have ${have} stickers. ${toNext} more stars for the next one!`;
+  app.replaceChildren(
+    el('div', { class: 'topbar' },
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => showGames(childId) }, '⬅️'),
+      el('h1', {}, `${child.name}’s sticker book`),
+    ),
+    el('p', { style: 'font-size:1.6rem;margin:0' }, text),
+    el('div', { class: 'sticker-grid' }, STICKERS.map((s, i) =>
+      el('div', { class: `sticker ${i < have ? '' : 'locked'}` }, i < have ? s : '❔'))),
+  );
+  speak(text);
 }
 
 /* ---------- Screen 3: a game ---------- */
@@ -77,7 +102,11 @@ function playGame(childId, gameId) {
       if (finished) return; // child left the game early
       finished = true;
       // Save progress: add the stars, remember the best score for this game.
+      const before = stickersFor(child.stars);
       child.stars += stars;
+      if (stickersFor(child.stars) > before) {
+        message += ` You unlocked a new sticker: ${STICKERS[stickersFor(child.stars) - 1]}!`;
+      }
       const rec = child.played[gameId] || { best: 0, times: 0 };
       rec.best = Math.max(rec.best, stars);
       rec.times += 1;
@@ -95,7 +124,7 @@ function showDone(childId, gameId, stars, message) {
   sfx.win();
   speak(`${praise} ${message} You got ${stars} stars.`);
   app.replaceChildren(
-    el('div', { class: 'done' },
+    el('div', { class: 'done-screen' },
       el('h2', {}, praise),
       el('div', { class: 'stars' }, [1, 2, 3].map(n =>
         el('span', { class: n <= stars ? '' : 'dim', style: `animation-delay:${n * 0.25}s` }, '⭐'))),

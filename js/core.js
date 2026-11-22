@@ -103,6 +103,7 @@ export const sfx = {
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue; // skip empty attributes
     if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
     else if (k === 'class') node.className = v;
     else node.setAttribute(k, v);
@@ -144,3 +145,25 @@ export const pick = list => list[Math.floor(Math.random() * list.length)];
 
 /** Kind words for a right answer, chosen at random. */
 export const PRAISE = ['MashaAllah!', 'Well done!', 'Great job!', 'Excellent!', 'Alhamdulillah!'];
+
+/* ---------- Grown-up check ----------
+   A pop-over sum (e.g. 7 × 8). Resolves true if answered right.
+   Used where a parent needs to approve something, like a surah badge. */
+export function askGrownUp(message = 'Grown-ups only') {
+  return new Promise(resolve => {
+    const a = 6 + Math.floor(Math.random() * 7);
+    const b = 5 + Math.floor(Math.random() * 8);
+    const input = el('input', { type: 'number', inputmode: 'numeric', class: 'gate-input' });
+    const close = ok => { overlay.remove(); resolve(ok); };
+    const overlay = el('div', { class: 'overlay' },
+      el('div', { class: 'math-gate panel' },
+        el('p', { class: 'note' }, message),
+        el('div', { class: 'q' }, `${a} × ${b} = ?`),
+        input,
+        el('div', { class: 'row' },
+          el('button', { class: 'big-btn', onclick: () => close(Number(input.value) === a * b) }, 'Enter'),
+          el('button', { class: 'big-btn secondary', onclick: () => close(false) }, 'Cancel'))));
+    document.body.append(overlay);
+    input.focus();
+  });
+}

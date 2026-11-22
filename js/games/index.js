@@ -8,7 +8,14 @@
      ctx.child   - the child playing
      ctx.finish(stars, message) - call once when the game is done
    ========================================================= */
+import quran from './quran.js';
 import wudu from './wudu.js';
+import duas from './duas.js';
+import manners from './manners.js';
+import stories from './stories.js';
 import pillars from './pillars.js';
+import letters from './letters.js';
+import maths from './maths.js';
 
-export const GAMES = [wudu, pillars];
+// Shown on the My games screen in this order.
+export const GAMES = [quran, wudu, duas, manners, stories, pillars, letters, maths];

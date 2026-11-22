@@ -1,0 +1,73 @@
+/* =========================================================
+   quiz.js: a shared "question and answer" runner used by
+   several games (letters, manners, maths, stories).
+
+   runQuiz(root, questions, onDone)
+     questions: [{
+       prompt:  'Text shown at the top',
+       say:     'Text read aloud (defaults to prompt)',
+       pic:     'Big emoji or text shown above the options' (optional),
+       picClass:'extra CSS class for pic' (optional),
+       options: ['A', 'B', 'C'],   // labels shown on buttons
+       answer:  'A',               // the right label
+       optionClass: 'CSS class for option buttons' (optional),
+       explain: 'Said after a right answer' (optional),
+     }]
+     onDone(mistakes) is called after the last question.
+   Wrong answers never end the game: the child just tries again.
+   ========================================================= */
+import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from './core.js';
+
+export function runQuiz(root, questions, onDone, { shuffleOptions = true } = {}) {
+  let qi = 0;
+  let mistakes = 0;
+  show();
+
+  function show() {
+    const q = questions[qi];
+    const voice = q.say || q.prompt;
+    const dots = el('div', { class: 'dots' }, questions.map((_, i) =>
+      el('span', { class: i < qi ? 'dot done' : i === qi ? 'dot now' : 'dot' })));
+    const box = el('div', { class: 'options' });
+    const opts = shuffleOptions ? shuffle(q.options) : q.options;
+    box.append(...opts.map(label => {
+      const b = el('button', { class: `option ${q.optionClass || ''}`, onclick: () => answer(label, b) }, label);
+      return b;
+    }));
+    root.replaceChildren(...[
+      el('div', { class: 'prompt' },
+        el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(voice) }, '🔊'),
+        el('p', {}, q.prompt)),
+      q.pic ? el('div', { class: `question-pic ${q.picClass || ''}` }, q.pic) : null,
+      box,
+      dots,
+    ].filter(Boolean));
+    speak(voice);
+
+    function answer(label, btn) {
+      if (box.dataset.locked) return;
+      if (label === q.answer) {
+        box.dataset.locked = '1';
+        sfx.right();
+        btn.classList.add('right');
+        const praise = pick(PRAISE);
+        toast(praise);
+        speak(q.explain ? `${praise} ${q.explain}` : praise);
+        // Give longer explanations time to be heard.
+        const wait = q.explain ? Math.min(6000, 1800 + q.explain.length * 45) : 1500;
+        setTimeout(() => {
+          qi++;
+          qi < questions.length ? show() : onDone(mistakes);
+        }, wait);
+      } else {
+        mistakes++;
+        sfx.tryAgain();
+        wiggle(btn);
+        toast('Try again!');
+      }
+    }
+  }
+}
+
+/* Stars for any quiz: finishing earns 2, no mistakes earns 3. */
+export const starsFrom = (mistakes, band) => (band === 'little' || mistakes === 0 ? 3 : 2);
