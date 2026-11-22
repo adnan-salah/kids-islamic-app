@@ -10,6 +10,10 @@ import { LETTERS } from '../js/games/letters.js';
 import { SCENES } from '../js/games/manners.js';
 import { DUAS } from '../js/games/duas.js';
 import { STORIES } from '../js/games/stories.js';
+import { EASY, HARD as HARD_WORDS, SENTENCES, READING } from '../js/games/words.js';
+import { ROOMS } from '../js/games/house.js';
+import { ABC, RHYMES } from '../js/games/sounds.js';
+import { LEVEL1, LEVEL2, LEVEL3 } from '../js/games/world.js';
 
 export function allLines() {
   const L = [];
@@ -57,8 +61,45 @@ export function allLines() {
   add('Pick a surah to practise.', 'MashaAllah! Ask a grown-up to listen and give you your badge.');
 
   // Maths (little ones only: counting)
-  ['camels', 'moons', 'stars', 'masjids', 'apples'].forEach(t => add(`How many ${t}?`));
+  ['apples', 'ducks', 'stars', 'cars', 'balls', 'camels'].forEach(t => add(`How many ${t}?`));
   [1, 2, 3, 4, 5].forEach(n => add(`Yes, ${n}!`));
+
+  // Finishing messages for the newer games
+  add('You won the race!', 'You finished the race!', 'You finished the puzzle!', 'You are a Word Star!',
+      'The kittens love their new house!', 'You know your sounds and rhymes!', 'You are a World Explorer!',
+      'You can tell the time and count money!', 'You have a super memory!');
+  [0, 1, 2, 3, 4, 5].forEach(n => add(`You scored ${n} out of 5!`));
+
+  // Sports Maths (questions are random, so only the fixed lines)
+  add('Pick a game: race or penalties.', 'Ready, set, go!', 'Goal!', 'Saved by the keeper!');
+
+  // Jigsaw
+  add('Pick a picture!', 'Put the pieces in the right places.');
+
+  // Word Star
+  add('Spell the word!', 'Put the words in the right order.', 'Read the story, then tap Ready.');
+  add(EASY.map(w => w[0]), HARD_WORDS.map(w => w[0]), HARD_WORDS.map(w => `Spell the word that means: ${w[1]}`));
+  add(SENTENCES);
+  READING.forEach(r => add(r.text, r.questions.map(q => q.q)));
+
+  // My Little House
+  add('Tap a room to help the kittens move in!', 'Tap another room!');
+  ROOMS.forEach(r => r.qs.forEach(q => add(q.q, q.why)));
+
+  // Sounds & Rhymes
+  ABC.forEach(x => {
+    const L1 = x.letter.toUpperCase();
+    add(`Which one starts with ${L1}?`, `${L1} is for ${x.word}!`,
+        `What letter does ${x.word} start with?`, `${x.word} starts with ${L1}.`);
+  });
+  RHYMES.forEach(([a, b]) => add(`Which word rhymes with ${a[0]}?`, `Which word rhymes with ${b[0]}?`,
+    `${a[0]} and ${b[0]} rhyme!`, `${b[0]} and ${a[0]} rhyme!`));
+
+  // World Explorer
+  [...LEVEL1, ...LEVEL2, ...LEVEL3].forEach(q => add(q.q, q.why));
+
+  // Time & Money and Memory Match
+  add('What time does the clock show?', 'How much money is this?', 'Find the matching pairs!');
 
   return [...new Set(L)];
 }
