@@ -11,7 +11,7 @@
                              whose capital is Nairobi".
    ========================================================= */
 import { el, speak, speakThen, sfx, toast, shuffle, pick, praiseFor } from '../core.js';
-import { createGlobe, byId } from '../globe.js';
+import { createGlobe, byId, theName } from '../globe.js';
 import { confetti, kasemSays } from '../fun.js';
 import { FACTS, NO_CAPITAL_Q } from '../../data/geo-facts.js';
 import { CONTINENTS } from '../../data/world.js';
@@ -23,7 +23,7 @@ const MAX_LEVEL = { little: 1, explorer: 2, champion: 3 };
 export function aboutCountry(c) {
   const f = FACTS[c.id];
   // One line per country, so it can be a single recorded clip.
-  if (f) return `${c.name}. The capital city is ${c.capital}. ${f.fact}`;
+  if (f) return `${c.name}. The capital city is ${c.capital.replace(/\.$/, '')}. ${f.fact}`;
   return [`${c.name}.`, c.capital ? `The capital city is ${c.capital}.` : null, CONTINENTS[c.cont] ? `It is in ${CONTINENTS[c.cont]}.` : null];
 }
 
@@ -118,7 +118,7 @@ export default {
         globe.clearMarks(); globe.label(null);
         const c = byId(rounds[round]).c;
         const capitalQ = band === 'champion' && c.capital && !NO_CAPITAL_Q.includes(c.id) && Math.random() < 0.35;
-        prompt.textContent = capitalQ ? `Find the country whose capital is ${c.capital}!` : `Find ${c.name}!`;
+        prompt.textContent = capitalQ ? `Find the country whose capital is ${c.capital}!` : `Find ${theName(c)}!`;
         dots.replaceChildren(...rounds.map((_, i) => el('span', { class: i < round ? 'dot done' : i === round ? 'dot now' : 'dot' })));
         if (band === 'little') { globe.mark(c.id, 'target'); globe.zoom(1); }
         speak(prompt.textContent);
@@ -136,7 +136,7 @@ export default {
           toast(`${praise} ${c.flag}`);
           round++;
           globe.spinTo(want);
-          speakThen([praise, `That is ${c.name}.`], 1500).then(() => {
+          speakThen([praise, `That is ${theName(c)}.`], 1500).then(() => {
             if (!root.isConnected) return;
             if (round < rounds.length) next();
             else ctx.finish(mistakes <= rounds.length / 2 ? 3 : 2, 'You are a globe expert!');
@@ -149,8 +149,8 @@ export default {
             // Help: turn the globe to show where it is.
             globe.mark(want, 'target');
             globe.spinTo(want, Math.max(globe.zoomLevel, 1.3));
-            speak([`That is ${tapped.name}.`, 'Look for the red country!']);
-          } else speak([`That is ${tapped.name}.`, 'Try again!']);
+            speak([`That is ${theName(tapped)}.`, 'Look for the red country!']);
+          } else speak([`That is ${theName(tapped)}.`, 'Try again!']);
         }
       }
     }

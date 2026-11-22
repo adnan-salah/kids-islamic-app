@@ -11,7 +11,7 @@
    ========================================================= */
 import { shuffle, pick } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
-import { createGlobe, byId } from '../globe.js';
+import { createGlobe, byId, theName } from '../globe.js';
 import { FACTS, WORLD_QS, NO_CAPITAL_Q, NO_CONTINENT_Q } from '../../data/geo-facts.js';
 import { CONTINENTS } from '../../data/world.js';
 
@@ -29,7 +29,7 @@ function continentQ(id, n) {
   globe.mark(id, 'target');
   globe.spinTo(id, 1.5);
   return {
-    prompt: `${c.name} is the red country. Which continent is it in?`,
+    prompt: `${c.name.replace(/^United/, 'The United')} is the red country. Which continent is it in?`,
     picNode: globe.el,
     options: [right, ...wrong],
     answer: right,
@@ -41,11 +41,11 @@ function capitalQ(id, n, ids) {
   const c = byId(id).c;
   const wrong = shuffle(ids.filter(x => x !== id && !NO_CAPITAL_Q.includes(x)).map(x => byId(x).c.capital).filter(Boolean)).slice(0, n - 1);
   return {
-    prompt: `What is the capital city of ${c.name}?`,
+    prompt: `What is the capital city of ${theName(c)}?`,
     pic: c.flag,
     options: [c.capital, ...wrong],
     answer: c.capital,
-    explain: `${c.capital} is the capital of ${c.name}.`,
+    explain: `${c.capital} is the capital of ${theName(c)}.`,
   };
 }
 

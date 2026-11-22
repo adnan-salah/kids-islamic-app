@@ -61,7 +61,7 @@ export const FACTS = {
   OM: { level: 3, pic: '🐢', fact: 'Oman has beaches where green sea turtles lay their eggs.' },
   QA: { level: 3, pic: '⚽', fact: 'Qatar hosted the football World Cup in 2022.' },
   KW: { level: 3, pic: '🛢️', fact: 'Kuwait is a small country with lots of oil.' },
-  SO: { level: 3, pic: '🐫', fact: 'Somalia has more camels than any other country.' },
+  SO: { level: 3, pic: '🐫', fact: 'Somalia has millions of camels, and camel milk is a favourite drink there.' },
   SD: { level: 3, pic: '🏺', fact: 'Sudan has more pyramids than Egypt.' },
   ET: { level: 3, pic: '☕', fact: 'Ethiopia is where coffee was first found.' },
   TZ: { level: 3, pic: '🏔️', fact: 'Tanzania has Mount Kilimanjaro, the highest mountain in Africa.' },

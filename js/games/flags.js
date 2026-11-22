@@ -8,7 +8,7 @@
    ========================================================= */
 import { el, shuffle, pick } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
-import { byId } from '../globe.js';
+import { byId, theName } from '../globe.js';
 import { FACTS } from '../../data/geo-facts.js';
 
 const flagOf = id => byId(id).c.flag;
@@ -35,7 +35,7 @@ export default {
         options: [flagOf(id), ...shuffle(ids.filter(x => x !== id)).slice(0, 2).map(flagOf)],
         answer: flagOf(id),
         optionClass: 'flag-option',
-        explain: `That is ${nameOf(id)}.`,
+        explain: `That is ${theName(byId(id).c)}.`,
       }));
     } else {
       const max = band === 'champion' ? 3 : 2;
@@ -46,10 +46,10 @@ export default {
         : shuffle(ids).slice(0, 10);
       questions = chosen.map((id, i) => {
         const others = shuffle(ids.filter(x => x !== id)).slice(0, n - 1);
-        const fact = `That is ${nameOf(id)}.`;
+        const fact = `That is ${theName(byId(id).c)}.`;
         if (band === 'champion' && i % 3 === 2) {
           return {
-            prompt: `Which is the flag of ${nameOf(id)}?`,
+            prompt: `Which is the flag of ${theName(byId(id).c)}?`,
             pic: FACTS[id]?.pic || '🚩',
             options: [flagOf(id), ...others.map(flagOf)],
             answer: flagOf(id),

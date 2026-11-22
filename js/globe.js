@@ -33,6 +33,10 @@ export function features() {
 }
 export const byId = id => features().find(f => f.id === id);
 
+/* Country name for use inside a sentence: "the United States", "the Netherlands". */
+const NEEDS_THE = /^(United |Netherlands|Philippines|Bahamas|Gambia|Maldives)|Republic/;
+export const theName = c => (NEEDS_THE.test(c.name) ? 'the ' + c.name : c.name);
+
 /* Where to look to see a country well (its biggest piece, so France is
    not pulled into the ocean by its islands). */
 export function centreOf(id) {
