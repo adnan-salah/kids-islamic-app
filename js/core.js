@@ -44,21 +44,39 @@ export function resetState() {
 }
 
 /* ---------- Speech ----------
-   Uses the tablet's built-in voice. Prefers an Australian or British
-   English voice when the tablet has one. Later, a parent's own recordings
-   can replace this. */
+   Uses the tablet's built-in voices. A parent can choose the voice,
+   speed and pitch in the parent area (saved on this tablet).
+   With no choice saved, it prefers Australian, then British English. */
+const VOICE_KEY = 'noor-learning:voice';
+export let voiceSettings = { name: '', rate: 0.9, pitch: 1.1 };
+try { Object.assign(voiceSettings, JSON.parse(localStorage.getItem(VOICE_KEY)) || {}); } catch { /* defaults */ }
+
 let voice = null;
+/** English voices installed on this tablet. */
+export function englishVoices() {
+  return 'speechSynthesis' in window
+    ? speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith('en'))
+    : [];
+}
 function pickVoice() {
-  const voices = speechSynthesis.getVoices();
+  const voices = englishVoices();
   voice =
+    voices.find(v => v.name === voiceSettings.name) ||
     voices.find(v => v.lang === 'en-AU') ||
     voices.find(v => v.lang === 'en-GB') ||
-    voices.find(v => v.lang.startsWith('en')) ||
+    voices[0] ||
     null;
 }
 if ('speechSynthesis' in window) {
   pickVoice();
   speechSynthesis.onvoiceschanged = pickVoice;
+}
+
+/** Save a new voice choice: { name, rate, pitch } (any of them). */
+export function setVoice(changes) {
+  Object.assign(voiceSettings, changes);
+  localStorage.setItem(VOICE_KEY, JSON.stringify(voiceSettings));
+  pickVoice();
 }
 
 export function speak(text) {
@@ -67,8 +85,8 @@ export function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   if (voice) u.voice = voice;
   u.lang = voice ? voice.lang : 'en-AU';
-  u.rate = 0.9;   // a little slower for young listeners
-  u.pitch = 1.1;
+  u.rate = voiceSettings.rate;
+  u.pitch = voiceSettings.pitch;
   speechSynthesis.speak(u);
 }
 
