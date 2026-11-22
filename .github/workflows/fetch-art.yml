@@ -1,0 +1,46 @@
+# Downloads app artwork listed in img/art/list.tsv (name <TAB> mode <TAB> url).
+#   cut: a character on a white background. The white around it is made
+#        see-through, and it is saved as a 600px PNG: img/art/<name>.png
+#   bg:  a background picture, saved as a 1600px JPEG: img/art/<name>.jpg
+# Used because the pictures are made elsewhere and their links expire.
+name: Fetch artwork
+on:
+  push:
+    branches: [main]
+    paths: [img/art/list.tsv]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and prepare pictures
+        run: |
+          set -e
+          command -v convert >/dev/null || (sudo apt-get update && sudo apt-get install -y imagemagick)
+          while IFS=$'\t' read -r name mode url; do
+            [ -z "$name" ] && continue
+            if [ "$mode" = cut ]; then
+              [ -f "img/art/$name.png" ] && continue
+              curl -sSfL --retry 3 -o "/tmp/$name.src" "$url"
+              # Add a white border so every edge joins up, flood-fill the white
+              # from the corner to transparent, then trim and resize.
+              convert "/tmp/$name.src" -alpha set -bordercolor white -border 2 \
+                -fuzz 7% -fill none -draw "color 0,0 floodfill" -shave 2x2 \
+                -channel A -morphology Erode Disk:1 +channel \
+                -trim +repage -resize 600x600 -strip "img/art/$name.png"
+            else
+              [ -f "img/art/$name.jpg" ] && continue
+              curl -sSfL --retry 3 -o "/tmp/$name.src" "$url"
+              convert "/tmp/$name.src" -resize 1600x1600 -strip -quality 80 "img/art/$name.jpg"
+            fi
+          done < img/art/list.tsv
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add img/art/*.png img/art/*.jpg 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "Add artwork"
+          git push
