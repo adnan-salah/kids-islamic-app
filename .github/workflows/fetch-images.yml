@@ -1,0 +1,32 @@
+# Downloads puzzle pictures listed in img/puzzles/list.tsv (id <TAB> url),
+# shrinks each to an 800px JPEG as img/puzzles/<id>.jpg, and commits them.
+# Used because the pictures are made elsewhere and their links expire.
+name: Fetch puzzle pictures
+on:
+  push:
+    branches: [main]
+    paths: [img/puzzles/list.tsv]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and shrink pictures
+        run: |
+          set -e
+          command -v convert >/dev/null || (sudo apt-get update && sudo apt-get install -y imagemagick)
+          while IFS=$'\t' read -r id url; do
+            [ -z "$id" ] && continue
+            [ -f "img/puzzles/$id.jpg" ] && continue
+            curl -sSfL --retry 3 -o "/tmp/$id.png" "$url"
+            convert "/tmp/$id.png" -resize 800x800 -strip -quality 82 "img/puzzles/$id.jpg"
+          done < img/puzzles/list.tsv
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add img/puzzles/*.jpg
+          git diff --cached --quiet || git commit -m "Add puzzle pictures"
+          git push
