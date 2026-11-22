@@ -452,3 +452,31 @@ button {
 /* ---------- Subjects on the My games screen ---------- */
 .subject { display: flex; flex-direction: column; gap: .8rem; }
 .subject-title { margin: .4rem 0 0; font-size: 1.7rem; color: var(--teal); }
+
+/* ---------- Sounds & Rhymes ---------- */
+.question-pic.abc-big { font-size: 6rem; font-weight: 800; color: var(--teal); letter-spacing: .5rem; }
+.option.abc { font-size: 2.8rem; font-weight: 800; }
+
+/* ---------- Memory Match ---------- */
+.mem-grid { display: grid; gap: .9rem; max-width: 44rem; width: 100%; margin: 0 auto; }
+.mem-card { aspect-ratio: 1; max-height: 9.5rem; border-radius: 18px; background: var(--teal); font-size: 3.6rem; position: relative; box-shadow: 0 5px 0 #0003; }
+.mem-card .mem-front { display: none; }
+.mem-card.up { background: #fff; }
+.mem-card.up .mem-front { display: inline; }
+.mem-card.up .mem-back { display: none; }
+.mem-card .mem-back { font-size: 2.6rem; opacity: .8; }
+.mem-card.matched { background: #dcfce7; }
+
+/* ---------- Time & Money ---------- */
+.clock { width: min(15rem, 30vh); height: auto; }
+.coin-row { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; align-items: center; }
+.coin { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 1.5rem; box-shadow: inset 0 -5px 0 #0002, 0 3px 0 #0002; }
+.coin.silver { background: radial-gradient(#f1f5f9, #94a3b8); color: #334155; }
+.coin.gold { background: radial-gradient(#fde68a, #d97706); color: #78350f; }
+.coin.c5 { width: 4rem; height: 4rem; font-size: 1.2rem; }
+.coin.c10 { width: 4.6rem; height: 4.6rem; }
+.coin.c20 { width: 5.6rem; height: 5.6rem; }
+.coin.c50 { width: 6rem; height: 6rem; clip-path: polygon(50% 0, 81% 9%, 99% 35%, 99% 65%, 81% 91%, 50% 100%, 19% 91%, 1% 65%, 1% 35%, 19% 9%); }
+.coin.c100 { width: 5.4rem; height: 5.4rem; }
+.coin.c200 { width: 4.8rem; height: 4.8rem; }
+.option.pic-opt { font-size: 2.2rem; min-height: 7rem; }

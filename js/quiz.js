@@ -7,6 +7,7 @@
        prompt:  'Text shown at the top',
        say:     'Text read aloud (defaults to prompt)',
        pic:     'Big emoji or text shown above the options' (optional),
+       picNode: an element to show instead of pic, e.g. a clock (optional),
        picClass:'extra CSS class for pic' (optional),
        options: ['A', 'B', 'C'],   // labels shown on buttons
        answer:  'A',               // the right label
@@ -38,7 +39,8 @@ export function runQuiz(root, questions, onDone, { shuffleOptions = true } = {})
       el('div', { class: 'prompt' },
         el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(voice) }, '🔊'),
         el('p', {}, q.prompt)),
-      q.pic ? el('div', { class: `question-pic ${q.picClass || ''}` }, q.pic) : null,
+      q.picNode ? el('div', { class: 'question-pic' }, q.picNode)
+        : q.pic ? el('div', { class: `question-pic ${q.picClass || ''}` }, q.pic) : null,
       box,
       dots,
     ].filter(Boolean));
