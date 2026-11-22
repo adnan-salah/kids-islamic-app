@@ -16,7 +16,7 @@
                 button to practise from memory.
    Audio streams from everyayah.com, so it needs internet the first time.
    ========================================================= */
-import { el, speak, sfx, toast, askGrownUp } from '../core.js';
+import { el, speak, stopSpeech, sfx, toast, askGrownUp } from '../core.js';
 import { SURAHS } from '../../data/quran.js';
 
 const AUDIO_BASE = 'https://everyayah.com/data/Alafasy_128kbps/';
@@ -192,7 +192,7 @@ export default {
       stopFlag = true;
       player.pause();
       if (recorder) { recorder.onstop = null; recorder.stream.getTracks().forEach(t => t.stop()); recorder.stop(); recorder = null; }
-      speechSynthesis?.cancel();
+      stopSpeech();
     }
 
     /* ---------- Finishing a surah ---------- */
@@ -202,8 +202,8 @@ export default {
       const ok = await askGrownUp(`Grown-up: did they recite ${surah.name} well? Answer to give the badge.`);
       if (ok) child.badges[surah.number] = true;
       ctx.finish(ok ? 3 : 2, ok
-        ? `You earned the ${surah.name} badge! 🏅`
-        : `You practised ${surah.name}!`);
+        ? 'You earned your surah badge!'
+        : 'You practised your surah!');
     }
   },
 };

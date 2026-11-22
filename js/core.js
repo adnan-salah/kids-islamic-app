@@ -44,12 +44,20 @@ export function resetState() {
 }
 
 /* ---------- Speech ----------
-   Uses the tablet's built-in voices. A parent can choose the voice,
-   speed and pitch in the parent area (saved on this tablet).
-   With no choice saved, it prefers Australian, then British English. */
+   Two kinds of voice:
+   1. Natural voice (default): pre-recorded clips of every fixed line, in
+      audio/*.mp3, listed in audio/voice.json as { "exact text": "file" }.
+   2. The tablet's built-in voices, chosen in the parent area.
+   speak() takes one line or a list of lines and says them in order.
+   A line with no recorded clip falls back to the tablet voice
+   (e.g. maths questions, which change every game). */
 const VOICE_KEY = 'noor-learning:voice';
-export let voiceSettings = { name: '', rate: 0.9, pitch: 1.1 };
+export const NATURAL = '__natural__';
+export let voiceSettings = { name: NATURAL, rate: 0.9, pitch: 1.1 };
 try { Object.assign(voiceSettings, JSON.parse(localStorage.getItem(VOICE_KEY)) || {}); } catch { /* defaults */ }
+
+let clips = {};
+fetch('audio/voice.json').then(r => (r.ok ? r.json() : {})).then(m => { clips = m; }).catch(() => {});
 
 let voice = null;
 /** English voices installed on this tablet. */
@@ -79,15 +87,52 @@ export function setVoice(changes) {
   pickVoice();
 }
 
-export function speak(text) {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel(); // never talk over ourselves
-  const u = new SpeechSynthesisUtterance(text);
-  if (voice) u.voice = voice;
-  u.lang = voice ? voice.lang : 'en-AU';
-  u.rate = voiceSettings.rate;
-  u.pitch = voiceSettings.pitch;
-  speechSynthesis.speak(u);
+const clipPlayer = new Audio();
+let speakRun = 0; // bumps on every new speak() so old ones stop
+
+/** Stop anything being said right now. */
+export function stopSpeech() {
+  speakRun++;
+  clipPlayer.pause();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+/** True if a recorded clip exists for this exact line. */
+export const hasClip = line => Boolean(clips[line]);
+
+function playClip(file) {
+  return new Promise(resolve => {
+    clipPlayer.src = `audio/${file}`;
+    clipPlayer.playbackRate = 1;
+    clipPlayer.onended = resolve;
+    clipPlayer.onerror = resolve;
+    clipPlayer.play().catch(resolve);
+  });
+}
+
+function sayWithTablet(text) {
+  return new Promise(resolve => {
+    if (!('speechSynthesis' in window)) return resolve();
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.lang = voice ? voice.lang : 'en-AU';
+    u.rate = voiceSettings.rate;
+    u.pitch = voiceSettings.pitch;
+    u.onend = resolve;
+    u.onerror = resolve;
+    speechSynthesis.speak(u);
+  });
+}
+
+/** Say one line, or several lines in order: speak('Hi') or speak(['Well done!', 'Next one.']) */
+export async function speak(lines) {
+  stopSpeech();
+  const run = speakRun;
+  for (const line of [].concat(lines).filter(Boolean)) {
+    if (run !== speakRun) return;
+    if (voiceSettings.name === NATURAL && clips[line]) await playClip(clips[line]);
+    else await sayWithTablet(line);
+  }
 }
 
 /* ---------- Sounds ----------

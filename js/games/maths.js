@@ -48,7 +48,7 @@ function explorerQuestion() {
   }
   if (kind === 2) {
     const a = rand(6, 20), b = rand(1, a - 1);
-    return { prompt: `There are ${a} shoes on the masjid shelf. ${b} people take theirs and go home. How many shoes are left?`, pic: '👟', options: choices(a - b), answer: String(a - b) };
+    return { prompt: `There are ${a} shoes on the masjid shelf. ${b === 1 ? '1 person takes their shoes and goes home' : `${b} people take theirs and go home`}. How many shoes are left?`, pic: '👟', options: choices(a - b), answer: String(a - b) };
   }
   if (kind === 3) {
     const [p1, p2] = shuffle(Object.keys(RAKAH)).slice(0, 2);

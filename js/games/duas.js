@@ -12,7 +12,7 @@
    ========================================================= */
 import { el, speak, sfx, toast } from '../core.js';
 
-const DUAS = [
+export const DUAS = [
   { id: 'eat', emoji: '🍽️', when: 'Before eating', dua: 'Bismillah', meaning: 'In the name of Allah.', little: true },
   { id: 'ate', emoji: '😋', when: 'After eating', dua: 'Alhamdulillah', meaning: 'All praise is for Allah.', little: true },
   { id: 'sleep', emoji: '🛏️', when: 'Before sleeping', dua: 'Bismika Allahumma amutu wa ahya', meaning: 'In Your name, O Allah, I die and I live.', little: true },
@@ -42,9 +42,10 @@ export default {
     function menu() {
       const left = GOAL - learned.size;
       const text = `Pick a time of day to learn its dua. ${left} more to go!`;
+      const say = ['Pick a time of day to learn its dua.', `${left} more to go!`];
       root.replaceChildren(
         el('div', { class: 'prompt' },
-          el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(text) }, '🔊'),
+          el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(say) }, '🔊'),
           el('p', {}, text)),
         el('div', { class: 'tile-grid' }, list.map(d =>
           el('button', { class: `tile ${learned.has(d.id) ? 'done-tile' : ''}`, style: 'min-height:10rem', onclick: () => { sfx.tap(); show(d); } },
@@ -52,7 +53,7 @@ export default {
             el('span', { class: 'label', style: 'font-size:1.4rem' }, d.when),
             learned.has(d.id) ? el('span', { class: 'sub' }, '⭐ Learned') : null))),
       );
-      speak(text);
+      speak(say);
     }
 
     function show(d) {

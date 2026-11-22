@@ -9,7 +9,7 @@
 import { shuffle } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
 
-const LETTERS = [
+export const LETTERS = [
   ['ا', 'Alif'], ['ب', 'Baa'], ['ت', 'Taa'], ['ث', 'Thaa'], ['ج', 'Jeem'],
   ['ح', 'Ḥaa'], ['خ', 'Khaa'], ['د', 'Daal'], ['ذ', 'Dhaal'], ['ر', 'Raa'],
   ['ز', 'Zay'], ['س', 'Seen'], ['ش', 'Sheen'], ['ص', 'Ṣaad'], ['ض', 'Ḍaad'],

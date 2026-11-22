@@ -13,7 +13,7 @@ import { shuffle } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
 
 /* right: the kind choice. wrong: the other choices. why: said after. */
-const SCENES = {
+export const SCENES = {
   little: [
     { pic: '🧸', q: 'Your sister drops her teddy. What do you do?', right: '🤲 Pick it up for her', wrong: ['😝 Laugh at her'], why: 'Helping others makes Allah happy.' },
     { pic: '🍽️', q: 'Before we eat, we say…', right: 'Bismillah', wrong: ['Bye bye'], why: 'Bismillah means in the name of Allah.' },

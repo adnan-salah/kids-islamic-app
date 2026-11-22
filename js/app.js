@@ -3,7 +3,7 @@
    Screens: Who's playing -> My games -> Game -> Well done
             plus a Parent area behind a hold-and-sum lock.
    ========================================================= */
-import { BANDS, loadState, saveState, resetState, speak, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice } from './core.js';
+import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL } from './core.js';
 import { GAMES } from './games/index.js';
 
 const app = document.getElementById('app');
@@ -51,7 +51,7 @@ function showGames(childId) {
       ),
     )),
   );
-  speak(`Hello ${child.name}! Pick a game.`);
+  speak('Assalamu alaikum! Pick a game.');
 }
 
 function starsFor(child, gameId) {
@@ -76,7 +76,7 @@ function showStickers(childId) {
     el('div', { class: 'sticker-grid' }, STICKERS.map((s, i) =>
       el('div', { class: `sticker ${i < have ? '' : 'locked'}` }, i < have ? s : '❔'))),
   );
-  speak(text);
+  speak('Here is your sticker book!');
 }
 
 /* ---------- Screen 3: a game ---------- */
@@ -88,7 +88,7 @@ function playGame(childId, gameId) {
 
   app.replaceChildren(
     el('div', { class: 'topbar' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; speechSynthesis?.cancel(); showGames(childId); } }, '🏠'),
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; stopSpeech(); showGames(childId); } }, '🏠'),
       el('h1', {}, `${game.emoji} ${game.title}`),
     ),
     root,
@@ -104,31 +104,30 @@ function playGame(childId, gameId) {
       // Save progress: add the stars, remember the best score for this game.
       const before = stickersFor(child.stars);
       child.stars += stars;
-      if (stickersFor(child.stars) > before) {
-        message += ` You unlocked a new sticker: ${STICKERS[stickersFor(child.stars) - 1]}!`;
-      }
+      const newSticker = stickersFor(child.stars) > before ? STICKERS[stickersFor(child.stars) - 1] : null;
       const rec = child.played[gameId] || { best: 0, times: 0 };
       rec.best = Math.max(rec.best, stars);
       rec.times += 1;
       child.played[gameId] = rec;
       saveState(state);
-      showDone(childId, gameId, stars, message);
+      showDone(childId, gameId, stars, message, newSticker);
     },
   });
 }
 
 /* ---------- Screen 4: Well done! ---------- */
-function showDone(childId, gameId, stars, message) {
+function showDone(childId, gameId, stars, message, newSticker) {
   const child = findChild(childId);
   const praise = pick(['MashaAllah!', 'Alhamdulillah!', 'Well done!']);
   sfx.win();
-  speak(`${praise} ${message} You got ${stars} stars.`);
+  speak([praise, message, `You got ${stars} stars.`, newSticker ? 'You unlocked a new sticker!' : null]);
   app.replaceChildren(
     el('div', { class: 'done-screen' },
       el('h2', {}, praise),
       el('div', { class: 'stars' }, [1, 2, 3].map(n =>
         el('span', { class: n <= stars ? '' : 'dim', style: `animation-delay:${n * 0.25}s` }, '⭐'))),
       el('p', { style: 'font-size:1.8rem;margin:0' }, message),
+      newSticker ? el('p', { style: 'font-size:1.8rem;margin:0' }, `New sticker: ${newSticker}`) : null,
       el('p', { class: 'note', style: 'font-size:1.4rem' }, `${child.name} has ${child.stars} stars altogether.`),
       el('div', { class: 'row' },
         el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, 'Play again'),
@@ -207,7 +206,7 @@ function showParent() {
 
 /* Voice settings: pick any English voice on the tablet, plus speed and pitch. */
 function voicePanel() {
-  const SAMPLE = 'Assalamu alaikum! Let’s learn together. MashaAllah, great job!';
+  const SAMPLE = 'Assalamu alaikum! Let’s learn together. MashaAllah, great job!'; // also recorded as a clip
   const voices = englishVoices();
   // Android loads its voices a moment after the page opens: redraw when ready.
   if (!voices.length && 'speechSynthesis' in window) {
@@ -216,12 +215,14 @@ function voicePanel() {
   const current = voices.find(v => v.name === voiceSettings.name)?.name
     || voices.find(v => v.lang === 'en-AU')?.name || voices[0]?.name;
   const nice = v => `${v.name.replace(/^(Google|Samsung|Microsoft)\s*/i, '')} (${v.lang})`;
-  const select = el('select', { 'aria-label': 'Voice' },
-    voices.length ? voices.map(v => {
-      const o = el('option', { value: v.name }, nice(v));
-      if (v.name === current) o.selected = true;
+  const natural = el('option', { value: NATURAL }, 'Miriam (natural voice, recommended)');
+  if (voiceSettings.name === NATURAL) natural.selected = true;
+  const select = el('select', { 'aria-label': 'Voice' }, natural,
+    voices.map(v => {
+      const o = el('option', { value: v.name }, `Tablet voice: ${nice(v)}`);
+      if (voiceSettings.name !== NATURAL && v.name === current) o.selected = true;
       return o;
-    }) : el('option', {}, 'No voices found yet'));
+    }));
   select.addEventListener('change', () => { setVoice({ name: select.value }); speak(SAMPLE); });
 
   const slider = (label, key, min, max) => {
@@ -239,7 +240,7 @@ function voicePanel() {
       slider('Speed', 'rate', 0.6, 1.3),
       slider('Pitch', 'pitch', 0.7, 1.5)),
     el('p', { class: 'note', style: 'margin:0' },
-      'More voices: on a Samsung tablet this is usually Settings › General management › Text-to-speech › Preferred engine (Google) › ⚙️ › Install voice data › English. Then reopen this page.'));
+      'Speed and pitch change tablet voices only. Maths questions always use a tablet voice. More tablet voices: on a Samsung tablet this is usually Settings › General management › Text-to-speech › Preferred engine (Google) › ⚙️ › Install voice data › English. Then reopen this page.'));
 }
 
 /* A two-tap reset, so nobody wipes the stars by accident.

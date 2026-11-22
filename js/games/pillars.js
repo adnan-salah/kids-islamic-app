@@ -9,7 +9,7 @@
    ========================================================= */
 import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
 
-const PILLARS = [
+export const PILLARS = [
   { id: 'shahadah', name: 'Shahadah', short: 'Shahadah', emoji: '☝️',
     describe: 'We say: there is no god but Allah, and Muhammad (peace be upon him) is His Messenger.',
     say: 'We say: there is no god but Allah, and Muhammad, peace be upon him, is His Messenger.' },
@@ -24,7 +24,7 @@ const PILLARS = [
 ];
 
 /* Champions: two questions per pillar; one is picked at random each game. */
-const HARD = {
+export const HARD = {
   shahadah: [
     { q: 'What does the Shahadah mean?', options: ['There is no god but Allah, and Muhammad (peace be upon him) is His Messenger', 'Allah is the Most Merciful', 'All praise is for Allah'], answer: 0 },
     { q: 'Which is the first Pillar of Islam?', options: ['Shahadah', 'Salah', 'Hajj'], answer: 0 },
@@ -113,7 +113,7 @@ export default {
           pillarEls[round].classList.add('built');
           const praise = pick(PRAISE);
           toast(praise);
-          speak(`${praise} You built the pillar of ${pillar.short}.`);
+          speak([praise, `You built the pillar of ${pillar.short}.`]);
           round++;
           setTimeout(() => (round < PILLARS.length ? showRound() : complete()), 2200);
         } else {

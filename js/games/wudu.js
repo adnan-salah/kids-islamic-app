@@ -12,7 +12,7 @@
    ========================================================= */
 import { el, speak, sfx, toast, wiggle, shuffle, pick, PRAISE } from '../core.js';
 
-const STEPS = [
+export const STEPS = [
   { id: 'bismillah', emoji: '🤲', label: 'Say Bismillah', say: 'First, make your intention and say Bismillah.' },
   { id: 'hands',     emoji: '👐', label: 'Hands',  say: 'Wash your hands, three times.' },
   { id: 'mouth',     emoji: '👄', label: 'Mouth',  say: 'Rinse your mouth, three times.' },
@@ -25,7 +25,7 @@ const STEPS = [
 ];
 
 /* Extra questions for the Champions band, asked after the order is done. */
-const QUIZ = [
+export const QUIZ = [
   { q: 'How many times do we wash each part, like hands and face?', options: ['1 time', '3 times', '10 times'], answer: '3 times' },
   { q: 'Which side do we wash first, for arms and feet?', options: ['Right', 'Left', 'It does not matter'], answer: 'Right' },
   { q: 'Which parts do we wipe, instead of washing?', options: ['Head and ears', 'Hands and feet', 'Face and arms'], answer: 'Head and ears' },
@@ -51,7 +51,7 @@ export default {
 
     const promptText = el('p', {}, intro);
     const prompt = el('div', { class: 'prompt' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(promptText.textContent) }, '🔊'),
+      el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(next === 0 ? intro : 'What comes next?') }, '🔊'),
       promptText,
     );
 

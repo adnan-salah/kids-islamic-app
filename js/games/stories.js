@@ -13,7 +13,7 @@
 import { el, speak, sfx } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
 
-const STORIES = [
+export const STORIES = [
   {
     id: 'nuh', title: 'Nuh and the Ark', emoji: '🚢',
     pages: [

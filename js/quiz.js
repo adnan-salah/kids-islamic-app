@@ -52,7 +52,7 @@ export function runQuiz(root, questions, onDone, { shuffleOptions = true } = {})
         btn.classList.add('right');
         const praise = pick(PRAISE);
         toast(praise);
-        speak(q.explain ? `${praise} ${q.explain}` : praise);
+        speak([praise, q.explain]);
         // Give longer explanations time to be heard.
         const wait = q.explain ? Math.min(6000, 1800 + q.explain.length * 45) : 1500;
         setTimeout(() => {
