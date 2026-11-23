@@ -824,15 +824,15 @@ body[data-bg] { background-attachment: fixed; background-size: cover; background
 .draw-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .draw-ink { touch-action: none; cursor: crosshair; }
 .draw-wrap.traced { box-shadow: 0 0 0 8px var(--green), 0 6px 0 #0002; }
-.draw-tools { display: flex; flex-direction: column; gap: .6rem; width: 18rem; flex: none; overflow-y: auto; padding: .3rem; }
-.draw-colours { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; justify-items: center; }
+.draw-tools { display: flex; flex-direction: column; gap: .6rem; width: 23rem; flex: none; overflow-y: auto; padding: .3rem; }
+.draw-colours { display: grid; grid-template-columns: repeat(7, 1fr); gap: .5rem; justify-items: center; }
 .draw-colours .swatch { width: 2.8rem; height: 2.8rem; border-width: 3px; }
 .draw-row { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; }
 .draw-tool, .draw-size { width: 3.2rem; height: 3.2rem; border-radius: 16px; background: #fff; font-size: 1.9rem; box-shadow: 0 3px 0 #0002; display: grid; place-items: center; padding: 0; }
 .draw-size span { display: block; border-radius: 50%; background: var(--ink); }
 .draw-tool.on, .draw-size.on { background: var(--gold-light); box-shadow: 0 0 0 4px var(--gold); }
 .draw-stamps { display: grid; grid-template-columns: repeat(6, 1fr); gap: .35rem; }
-.draw-stamps[hidden] { display: none; }
+.draw-stamps[hidden], .draw-colours[hidden] { display: none; }
 .draw-stamp { font-size: 1.7rem; background: #fff; border-radius: 12px; padding: .15rem 0; }
 .draw-stamp.on { background: var(--gold-light); box-shadow: 0 0 0 3px var(--gold); }
 .trace-dots { display: flex; gap: .4rem; }

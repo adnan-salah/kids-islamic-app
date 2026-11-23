@@ -119,6 +119,7 @@ export default {
           el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(traces ? traces[step].say : 'Draw anything you like!') }, '🔊'),
           promptText,
           progress,
+          traces ? el('button', { class: 'icon-btn', 'aria-label': 'Next one', onclick: skip }, '⏭️') : null,
           traces ? null : el('button', { class: 'big-btn art-done', onclick: done }, '✅ Done')),
         el('div', { class: 'draw-area' }, wrap, tools));
 
@@ -150,6 +151,7 @@ export default {
         tool = t;
         Object.entries(toolBtns).forEach(([k, b]) => b?.classList.toggle('on', k === t));
         stampRow.hidden = t !== 'stamp';
+        colourBox.hidden = t === 'stamp'; // stickers have their own colours
       }
       function brushPx() { return traces ? traceWidth() : [6, 14, 28][size] * (little ? 1.3 : 1); }
       function traceWidth() { return Math.min(W, H) * (little ? 0.075 : 0.06); }
@@ -258,10 +260,14 @@ export default {
         gctx.lineCap = gctx.lineJoin = 'round';
         const s = Math.min(W, H) * 0.78, cx = W / 2, cy = H / 2;
         if (t.kind === 'text') {
-          gctx.font = `700 ${s}px Fredoka, sans-serif`;
           gctx.textAlign = 'center';
           gctx.textBaseline = 'alphabetic';
-          const m = gctx.measureText(t.value);
+          // Size the glyph itself (not the font) to fill the board, so small letters are big too.
+          gctx.font = `700 ${s}px Fredoka, sans-serif`;
+          let m = gctx.measureText(t.value);
+          const fit = Math.min(s * 0.92 / (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent), W * 0.8 / m.width);
+          gctx.font = `700 ${s * fit}px Fredoka, sans-serif`;
+          m = gctx.measureText(t.value);
           const h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
           gctx.fillText(t.value, cx, cy + h / 2 - m.actualBoundingBoxDescent);
         } else {
@@ -294,6 +300,14 @@ export default {
       }
 
       let checking = false;
+      // Next one without finishing this one (so nobody gets stuck on a tricky letter).
+      function skip() {
+        if (checking) return;
+        sfx.tap();
+        if (step === traces.length - 1) traces[step] = traceList(band)[0]; // last one: swap for a new one
+        else traces.push(traces.splice(step, 1)[0]);                     // otherwise: do it later
+        nextTrace();
+      }
       function checkTrace() {
         if (checking) return;
         const g = gctx.getImageData(0, 0, guide.width, guide.height).data;
@@ -309,7 +323,7 @@ export default {
         }
         if (!want) return;
         const cover = hit / want, mess = stray / want;
-        if (cover >= (little ? 0.6 : 0.68) && mess <= (little ? 1.6 : 1.0)) {
+        if (cover >= (little ? 0.55 : 0.65) && mess <= (little ? 3 : 2)) {
           checking = true;
           sfx.right();
           toast(pick(PRAISE));
@@ -324,7 +338,7 @@ export default {
               ctx.finish(3, 'Super tracing!');
             } else nextTrace();
           }, 1300);
-        } else if (cover >= 0.5 && mess > (little ? 1.6 : 1.0)) {
+        } else if (cover >= 0.5 && mess > (little ? 3 : 2)) {
           toast('Try to stay on the grey line', 1800);
         }
       }
