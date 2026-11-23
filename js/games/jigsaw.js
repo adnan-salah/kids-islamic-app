@@ -35,6 +35,7 @@ export default {
   emoji: '🧩',
   noStats: true, // no right or wrong answers to count
   noLives: true, // a misplaced piece is not a wrong answer
+  noBuddy: true, // board and pieces need the whole width
   bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
