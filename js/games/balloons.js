@@ -48,6 +48,7 @@ function makeRule(band) {
 
 export default {
   id: 'balloons',
+  noFit: true, // sizes itself; touches are measured on its own surface
   title: 'Balloon Pop',
   emoji: '🎈',
   bands: ['little', 'explorer', 'champion'],

@@ -171,6 +171,7 @@ function childBar(child, onBack, backIcon = '🏠') {
 /* ---------- Screen 2: pick a subject ---------- */
 function showGames(childId) {
   const child = findChild(childId);
+  document.body.dataset.band = child.band;
   setBg('home');
   const subjects = SUBJECTS.filter(s => s.games.some(g => g.bands.includes(child.band)));
   const cards = subjects.map(subject => {
@@ -210,7 +211,8 @@ function showSubject(childId, subjectId) {
     el('h2', { class: 'subject-heading' }, `${subject.emoji} ${subject.name}`),
     el('div', { class: 'tile-grid' }, tiles),
   );
-  speak('Pick a game.');
+  // Say the subject's name too, for a child who can't read the heading yet.
+  speak([subject.name, 'Pick a game.']);
 }
 
 function starsFor(child, gameId) {
@@ -275,7 +277,7 @@ function showLevels(childId) {
         return el('div', { class: 'subject-level' },
           el('span', { class: 'emoji' }, sub.emoji),
           el('div', {}, el('strong', {}, `${sub.name}: ${sl.icon} ${sl.name}`), bar(sl.frac),
-            el('span', { class: 'sub' }, sl.toNext ? `${sl.toNext} stars to the next level` : 'Top level!')));
+            el('span', { class: 'sub' }, sl.toNext ? `${sl.toNext} star${sl.toNext === 1 ? '' : 's'} to the next level` : 'Top level!')));
       })),
       el('p', { class: 'book-line small' }, `🌍 Countries found on the globe: ${(child.found || []).length}`),
       el('h2', { class: 'book-title' }, `🎁 Treasures found: ${found.length} of ${TREASURES.length}`),
@@ -368,6 +370,8 @@ function playGame(childId, gameId) {
   setBg(subject.id);
   usePraise(subject.id === 'islam');
   const root = el('div', { class: 'stage' });
+  document.body.dataset.band = child.band;
+  missed = [];
   let finished = false;
   // Hearts: the older children get 3 tries per game; the 3-year-old never loses.
   lives = child.band !== 'little' && !game.noLives
@@ -391,6 +395,7 @@ function playGame(childId, gameId) {
   ].filter(Boolean));
 
   trackGame(child, game, state);
+  if (!game.noFit) fitStage(root);
   game.start({
     root,
     child,
@@ -423,6 +428,42 @@ function playGame(childId, gameId) {
    answers and the game is lost, so the child starts it again. */
 const MAX_LIVES = 3;
 let lives = null;
+// What the child got wrong in this game, to go over on the out-of-hearts screen.
+let missed = [];
+document.addEventListener('answer', e => {
+  const { ok, info } = e.detail;
+  if (ok || info?.answer == null) return;
+  const q = info.q || document.querySelector('.stage .prompt p')?.textContent;
+  if (q && !missed.some(m => m.q === q)) missed.push({ q, answer: String(info.answer) });
+});
+
+/* Keep a game on one screen. If what a game draws is taller than the space
+   under the top bar, shrink the whole game area just enough to fit (never
+   below 70%), so no answer is ever below the fold. Runs again whenever the
+   game changes what is on screen. Games that measure touches on a canvas
+   opt out with noFit and size themselves. */
+function fitStage(root) {
+  let frame = 0, timers = [];
+  const fit = () => {
+    frame = 0;
+    if (!root.isConnected) { watcher.disconnect(); removeEventListener('resize', ask); return; }
+    root.style.zoom = '';
+    const below = parseFloat(getComputedStyle(app).paddingBottom) + parseFloat(getComputedStyle(root).marginBottom);
+    const space = innerHeight - (root.getBoundingClientRect().top + scrollY) - below - 2;
+    const height = root.offsetHeight;
+    if (height > space + 2) root.style.zoom = Math.max(0.7, space / height).toFixed(3);
+  };
+  const ask = () => { if (!frame) frame = requestAnimationFrame(fit); };
+  const watcher = new MutationObserver(() => {
+    ask();
+    // Pictures and fonts can change the height a moment later.
+    timers.forEach(clearTimeout);
+    timers = [300, 1200].map(ms => setTimeout(ask, ms));
+  });
+  watcher.observe(root, { childList: true, subtree: true });
+  addEventListener('resize', ask);
+  requestAnimationFrame(ask);
+}
 function drawHearts() {
   if (!lives) return;
   lives.box.replaceChildren(...Array.from({ length: MAX_LIVES }, (_, i) =>
@@ -447,14 +488,18 @@ function showLost(childId, gameId) {
   stopSpeech();
   app.replaceChildren(
     el('div', { class: 'done-screen lost-screen' },
-      kasem('oops', 'big-kasem jump-in'),
-      el('h2', {}, 'Out of hearts!'),
-      el('div', { class: 'stars' }, [1, 2, 3].map(() => el('span', { class: 'dim' }, '💔'))),
-      el('p', { class: 'done-msg' }, 'Three wrong answers. Take your time and try again!'),
+      kasem('think', 'big-kasem jump-in'),
+      el('h2', {}, 'Nearly there!'),
+      // The hearts fill back up: a fresh start, not a score of zero.
+      el('div', { class: 'stars refill' }, [1, 2, 3].map(n => el('span', { style: `animation-delay:${0.2 + n * 0.3}s` }, '❤️'))),
+      el('p', { class: 'done-msg' }, 'Your hearts are full again. Have another go!'),
+      missed.length ? el('div', { class: 'missed-list' },
+        el('strong', {}, 'Remember these:'),
+        missed.slice(-2).map(m => el('p', {}, el('span', { class: 'missed-q' }, m.q), el('span', { class: 'missed-a' }, `✅ ${m.answer}`)))) : null,
       el('div', { class: 'row' },
-        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, '🔁 Try again'),
-        el('button', { class: 'big-btn secondary', onclick: () => showSubject(childId, subject.id) }, 'More games'))));
-  speak('Out of hearts! Take your time and try again.');
+        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, el('span', { class: 'btn-pic' }, '🔁'), 'Try again'),
+        el('button', { class: 'big-btn secondary', onclick: () => showSubject(childId, subject.id) }, el('span', { class: 'btn-pic' }, '🎮'), 'More games'))));
+  speak(['Nearly there!', 'Your hearts are full again. Have another go!']);
 }
 
 /* Each child has their own maths level (games/maths.js), which moves
@@ -503,8 +548,8 @@ function showDone(childId, gameId, stars, message, lv = {}, before = 0) {
           ? el('p', { class: 'note big-note' }, `🎁 ${left} more game${left > 1 ? 's' : ''} today to open the treasure chest!`)
           : null,
       el('div', { class: 'row' },
-        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, '🔁 Play again'),
-        el('button', { class: 'big-btn secondary', onclick: () => showSubject(childId, subject.id) }, 'More games'),
+        el('button', { class: 'big-btn', onclick: () => playGame(childId, gameId) }, el('span', { class: 'btn-pic' }, '🔁'), 'Play again'),
+        el('button', { class: 'big-btn secondary', onclick: () => showSubject(childId, subject.id) }, el('span', { class: 'btn-pic' }, '🎮'), 'More games'),
       ),
     ),
   );
@@ -516,11 +561,13 @@ function showDone(childId, gameId, stars, message, lv = {}, before = 0) {
 function parentButton() {
   let timer;
   const btn = el('button', { class: 'icon-btn', 'aria-label': 'Parent area (hold)', style: 'touch-action:none' }, '⚙️');
-  const start = e => { e.preventDefault(); timer = setTimeout(showGate, 2000); };
-  const stop = () => clearTimeout(timer);
+  // A ring fills around the gear while it is held, so a grown-up can see it working.
+  const start = e => { e.preventDefault(); btn.classList.add('holding'); timer = setTimeout(() => { btn.classList.remove('holding'); showGate(); }, 2000); };
+  const stop = () => { clearTimeout(timer); btn.classList.remove('holding'); };
   btn.addEventListener('pointerdown', start);
   btn.addEventListener('pointerup', stop);
   btn.addEventListener('pointerleave', stop);
+  btn.addEventListener('pointercancel', stop);
   btn.addEventListener('contextmenu', e => e.preventDefault());
   return btn;
 }
@@ -536,6 +583,7 @@ function showParent() {
       el('button', { class: 'icon-btn', 'aria-label': 'Done', onclick: () => { saveState(state); showWho(); } }, '✅'),
       el('h1', {}, 'Parent area'),
     ),
+    hasPin() ? null : el('p', { class: 'pin-nudge' }, '🔒 No parent PIN is set yet, so this area is only protected by a sum. Set a PIN below to keep the children out.'),
     el('p', { class: 'note' }, 'Tap a picture to add a photo. Change names and age groups here too. Changes save straight away. Photos and progress stay on this tablet only.'),
     el('div', { class: 'parent-list' }, state.children.map(child => {
       // Tap the picture to choose a photo (camera or gallery).
@@ -573,11 +621,12 @@ function showParent() {
         }));
       band.addEventListener('change', () => { child.band = band.value; saveState(state); });
       const maths = el('select', { 'aria-label': 'Maths level' },
-        child.band === 'little' ? [['1', 'Maths: Little Stars']] : Object.entries(MATHS_LEVELS).map(([id, label]) => {
+        child.band === 'little' ? [el('option', { value: '1' }, 'Maths: Little Stars')] : Object.entries(MATHS_LEVELS).map(([id, label]) => {
           const o = el('option', { value: id }, `Maths now: ${label}`);
           if (+id === mathsLevelOf(child)) o.selected = true;
           return o;
         }));
+      if (child.band === 'little') maths.disabled = true;
       maths.addEventListener('change', () => { child.mathsLevel = +maths.value; child.mathsTrend = 0; saveState(state); });
       return el('div', { class: 'parent-row' },
         avatarBtn, file, name, band, maths, emojiBtn,

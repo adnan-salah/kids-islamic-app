@@ -52,6 +52,7 @@ const forVoice = t => t.replace(/ﷺ/g, ', peace be upon him,');
 
 export default {
   id: 'pillars',
+  noBuddy: true, // needs the width
   title: 'Pillars Quest',
   emoji: '🏛️',
   bands: ['explorer', 'champion'],

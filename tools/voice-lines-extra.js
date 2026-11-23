@@ -647,5 +647,15 @@ export const EXTRA_LINES = [
  "Right change! Thank you!",
  "Paid! Thank you!",
  "You are a money master!",
- "Level up! Your maths is getting harder!"
+ "Level up! Your maths is getting harder!",
+ "Nearly there!",
+ "Your hearts are full again. Have another go!",
+ "English",
+ "Maths",
+ "Geography",
+ "Science & nature",
+ "Life skills",
+ "Islam",
+ "Art & colour",
+ "Puzzles & action"
 ];

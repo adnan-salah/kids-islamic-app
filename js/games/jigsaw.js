@@ -30,6 +30,7 @@ const src = p => `img/puzzles/${p.id}.jpg`;
 
 export default {
   id: 'jigsaw',
+  noFit: true, // sizes itself; touches are measured on its own surface
   title: 'Jigsaw Fun',
   emoji: '🧩',
   noStats: true, // no right or wrong answers to count

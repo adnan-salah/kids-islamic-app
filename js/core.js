@@ -36,7 +36,8 @@ export function loadState() {
 }
 
 export function saveState(state) {
-  localStorage.setItem(KEY, JSON.stringify(state));
+  // A full tablet must never crash a game: keep playing and try again next save.
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* storage full */ }
 }
 
 export function resetState() {
@@ -57,7 +58,24 @@ export let voiceSettings = { name: NATURAL, rate: 0.9, pitch: 1.1 };
 try { Object.assign(voiceSettings, JSON.parse(localStorage.getItem(VOICE_KEY)) || {}); } catch { /* defaults */ }
 
 let clips = {};
-fetch('audio/voice.json').then(r => (r.ok ? r.json() : {})).then(m => { clips = m; }).catch(() => {});
+fetch('audio/voice.json').then(r => (r.ok ? r.json() : {})).then(m => { clips = m; setTimeout(saveClipsForOffline, 30000); }).catch(() => {});
+
+/* Quietly save every voice clip on the tablet, a few at a time, so the
+   voice still works with no wifi. The service worker keeps each clip it
+   sees. Skipped on data-saver connections; picks up where it left off. */
+async function saveClipsForOffline() {
+  if (!('caches' in window) || !navigator.serviceWorker?.controller || navigator.connection?.saveData) return;
+  try {
+    const cache = await caches.open('noor-v1');
+    const have = new Set((await cache.keys()).map(r => new URL(r.url).pathname.split('/').pop()));
+    const todo = [...new Set(Object.values(clips))].filter(f => !have.has(f));
+    for (let i = 0; i < todo.length; i += 3) {
+      if (!navigator.onLine) return;
+      await Promise.all(todo.slice(i, i + 3).map(f => fetch(`audio/${f}`).catch(() => {})));
+      await new Promise(r => setTimeout(r, 250));
+    }
+  } catch { /* try again next time the app opens */ }
+}
 
 let voice = null;
 /** English voices installed on this tablet. */
@@ -109,8 +127,10 @@ function playClip(file) {
     clipPlayer.src = `audio/${file}`;
     clipPlayer.playbackRate = 1;
     clipPlayer.onended = resolve;
-    clipPlayer.onerror = resolve;
-    clipPlayer.play().catch(resolve);
+    // Could not load (no wifi and not saved yet): report it so the tablet voice can step in.
+    const failed = () => { if (endClip === resolve) endClip = null; done(false); };
+    clipPlayer.onerror = failed;
+    clipPlayer.play().catch(e => (e?.name === 'NotSupportedError' ? failed() : resolve()));
   });
 }
 
@@ -134,8 +154,10 @@ export async function speak(lines) {
   const run = speakRun;
   for (const line of [].concat(lines).filter(Boolean)) {
     if (run !== speakRun) return;
-    if (voiceSettings.name === NATURAL && clips[line]) await playClip(clips[line]);
-    else await sayWithTablet(line);
+    if (voiceSettings.name === NATURAL && clips[line]) {
+      const played = await playClip(clips[line]);
+      if (played === false && run === speakRun) await sayWithTablet(line);
+    } else await sayWithTablet(line);
   }
 }
 
@@ -345,9 +367,10 @@ export function askGrownUp(message = 'Grown-ups only') {
       document.body.append(overlay);
       return;
     }
-    const a = 6 + Math.floor(Math.random() * 7);
-    const b = 5 + Math.floor(Math.random() * 8);
-    const input = el('input', { type: 'number', inputmode: 'numeric', class: 'gate-input' });
+    // No PIN yet: a sum that is too hard for the children to do in their heads.
+    const a = 13 + Math.floor(Math.random() * 16);
+    const b = 13 + Math.floor(Math.random() * 16);
+    const input = el('input', { type: 'text', inputmode: 'numeric', autocomplete: 'off', class: 'gate-input', 'aria-label': 'Answer' });
     overlay = el('div', { class: 'overlay' },
       el('div', { class: 'math-gate panel' },
         el('p', { class: 'note' }, message),

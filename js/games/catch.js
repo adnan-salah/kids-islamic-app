@@ -60,6 +60,7 @@ function makeRule(band) {
 
 export default {
   id: 'catch',
+  noFit: true, // sizes itself; touches are measured on its own surface
   title: 'Kasem’s Catch',
   emoji: '🧺',
   bands: ['little', 'explorer', 'champion'],

@@ -34,6 +34,7 @@ export const QUIZ = [
 
 export default {
   id: 'wudu',
+  noBuddy: true, // needs the width
   title: 'Wudu Steps',
   emoji: '💧',
   bands: ['little', 'explorer', 'champion'],

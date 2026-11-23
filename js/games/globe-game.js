@@ -37,6 +37,7 @@ export function aboutCountry(c) {
 
 export default {
   id: 'globe',
+  noFit: true, // sizes itself; touches are measured on its own surface
   title: 'Globe Explorer',
   emoji: '🌍',
   bands: ['little', 'explorer', 'champion'],

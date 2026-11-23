@@ -30,6 +30,7 @@ const DEFS = `<defs>
 
 export default {
   id: 'colouring',
+  noFit: true, // sizes itself; touches are measured on its own surface
   title: 'Colour In',
   emoji: '🖍️',
   noStats: true, // no right or wrong answers to count

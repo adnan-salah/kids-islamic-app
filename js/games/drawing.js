@@ -37,6 +37,7 @@ function traceList(band) {
 
 export default {
   id: 'drawing',
+  noFit: true, // sizes itself; touches are measured on its own surface
   title: 'Draw & Paint',
   emoji: '✏️',
   noStats: true, // no right or wrong answers to count
