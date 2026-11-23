@@ -1236,3 +1236,6 @@ body.calm .sort-bin.hint { animation: none; }
 /* The 3-year-old's finish screen when the treasure chest is ready as well. */
 body[data-band="little"] .done-screen:has(.chest-btn) .chest-btn.small img { height: clamp(3rem, 7vh, 5rem); }
 body[data-band="little"] .done-screen:has(.chest-btn) .row .big-btn .btn-pic { font-size: clamp(2.2rem, 6vh, 3.2rem); }
+/* After a wrong answer the game stops taking taps for a moment (see MISS_PAUSE_MS in app.js). */
+.stage.miss-pause { pointer-events: none; }
+.stage.miss-pause button:not(.wrong):not(.hint):not(.glow) { opacity: .6; transition: opacity .15s; }

@@ -466,6 +466,8 @@ function playGame(childId, gameId) {
    answers and the game is lost, so the child starts it again. */
 const MAX_LIVES = 3;
 let lives = null;
+const MISS_PAUSE_MS = 1500;
+let missTimer = 0;
 // What the child got wrong in this game, to go over on the out-of-hearts screen.
 let missed = [];
 document.addEventListener('answer', e => {
@@ -513,6 +515,13 @@ document.addEventListener('kasem', e => {
   lives.left--;
   drawHearts();
   lives.box.classList.remove('hurt'); void lives.box.offsetWidth; lives.box.classList.add('hurt');
+  // A short pause after a miss, so mashing buttons cannot burn all three hearts in a few seconds.
+  const stage = document.querySelector('.stage');
+  if (stage) {
+    stage.classList.add('miss-pause');
+    clearTimeout(missTimer);
+    missTimer = setTimeout(() => stage.classList.remove('miss-pause'), MISS_PAUSE_MS);
+  }
   if (lives.left <= 0) {
     const lose = lives.lose;
     lives = null;
