@@ -49,7 +49,7 @@ export default {
           el('p', {}, 'Pick a picture!')),
         el('div', { class: 'puzzle-pick' }, PUZZLES.map(p =>
           el('button', { class: 'puzzle-thumb', 'aria-label': p.name, onclick: () => { sfx.tap(); play(p); } },
-            el('img', { src: src(p), alt: '' })))));
+            el('img', { src: `img/thumb/${p.id}.jpg`, alt: '', loading: 'lazy' })))));
       speak('Pick a picture!');
     }
 

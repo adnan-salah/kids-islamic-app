@@ -76,7 +76,7 @@ export default {
       const right = item.options[0];
       const shown = shuffle(item.options.slice(0, nOpts));
       const box = el('div', { class: 'options' }, shown.map(opt => {
-        const b = el('button', { class: 'option', onclick: () => answer(opt, b) }, opt);
+        const b = el('button', { class: 'option', 'data-opt': opt, onclick: () => answer(opt, b) }, opt);
         return b;
       }));
       root.replaceChildren(
@@ -86,7 +86,7 @@ export default {
         el('div', { class: 'question-pic' }, r.emoji),
         box,
         el('div', { class: 'row' }, el('button', { class: 'big-btn secondary', onclick: house }, '⬅️ Back')));
-      speak(item.q);
+      speak([r.name, item.q]);
 
       function answer(opt, b) {
         if (box.dataset.locked) return;
@@ -109,6 +109,8 @@ export default {
           sfx.tryAgain();
           wiggle(b);
           toast('Try again!');
+          // The 3-year-old gets shown the right one after a miss.
+          if (band === 'little') [...box.children].find(x => x.dataset.opt === right)?.classList.add('hint');
         }
       }
     }

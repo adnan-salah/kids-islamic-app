@@ -68,6 +68,17 @@ async function saveClipsForOffline() {
   try {
     const cache = await caches.open('noor-v1');
     const have = new Set((await cache.keys()).map(r => new URL(r.url).pathname.split('/').pop()));
+    // A clip that was re-recorded is listed in audio/rev.json with a number. If the
+    // number is new to this tablet, throw the saved copy away so it is fetched again.
+    const rev = await fetch('audio/rev.json').then(r => (r.ok ? r.json() : {})).catch(() => ({}));
+    const seen = JSON.parse(localStorage.getItem('noor-clip-rev') || '{}');
+    for (const [f, n] of Object.entries(rev)) {
+      if (seen[f] === n || !navigator.onLine) continue;
+      await cache.delete(new URL(`audio/${f}`, location.href).href);
+      const res = await fetch(`audio/${f}`, { cache: 'reload' }).catch(() => null);
+      if (res?.ok) { seen[f] = n; have.add(f); }
+    }
+    localStorage.setItem('noor-clip-rev', JSON.stringify(seen));
     const todo = [...new Set(Object.values(clips))].filter(f => !have.has(f));
     for (let i = 0; i < todo.length; i += 3) {
       if (!navigator.onLine) return;
@@ -111,6 +122,7 @@ let endClip = null; // finishes the clip that is playing, if it gets stopped
 
 /** Stop anything being said right now. */
 export function stopSpeech() {
+  firstLine = null;
   speakRun++;
   clipPlayer.pause();
   endClip?.();
@@ -150,15 +162,24 @@ function sayWithTablet(text) {
 
 /** Say one line, or several lines in order: speak('Hi') or speak(['Well done!', 'Next one.']) */
 export async function speak(lines) {
+  const lead = firstLine;
   stopSpeech();
   const run = speakRun;
-  for (const line of [].concat(lines).filter(Boolean)) {
+  for (const line of [lead].concat(lines).filter(Boolean)) {
     if (run !== speakRun) return;
     if (voiceSettings.name === NATURAL && clips[line]) {
       const played = await playClip(clips[line]);
       if (played === false && run === speakRun) await sayWithTablet(line);
     } else await sayWithTablet(line);
   }
+}
+
+/* A line to say before whatever is spoken next (a game's name, for a child
+   who can't read the tile). If nothing else is said soon, it is said alone. */
+let firstLine = null;
+export function sayFirst(line) {
+  firstLine = line;
+  setTimeout(() => { if (firstLine === line) speak([]); }, 700);
 }
 
 /**
@@ -244,14 +265,16 @@ export function el(tag, attrs = {}, ...children) {
   for (const c of children.flat()) {
     if (c == null || c === false) continue;
     node.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    // Mark Arabic text as Arabic, for screen readers and the right letter shapes.
+    if (typeof c === 'string' && /[\u0600-\u06FF]/.test(c) && !/[A-Za-z]/.test(c) && !node.lang) node.lang = 'ar';
   }
   return node;
 }
 
 /** A short message at the bottom of the screen, e.g. "Try again!" */
-export function toast(text, ms = 1400) {
+export function toast(text, ms = 1400, cls = '') {
   document.querySelector('.toast')?.remove();
-  const t = el('div', { class: 'toast' }, text);
+  const t = el('div', { class: `toast ${cls}` }, text);
   document.body.append(t);
   setTimeout(() => t.remove(), ms);
 }

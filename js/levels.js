@@ -47,7 +47,12 @@ export function tierInfo(t) {
 /* What a child is called at each level band. */
 const TITLES = ['Little Learner', 'Curious Cub', 'Bright Spark', 'Brave Explorer', 'Clever Thinker',
   'Super Scholar', 'Wise Owl', 'Knowledge Knight', 'World Expert', 'Grand Master'];
-export const titleFor = level => TITLES[Math.min(TITLES.length - 1, Math.floor((level - 1) / 3))];
+/* The first two names are for little ones; older children get grown-up ones. */
+const OLDER = { 'Little Learner': 'Rising Star', 'Curious Cub': 'Quick Thinker' };
+export const titleFor = (level, band) => {
+  const t = TITLES[Math.min(TITLES.length - 1, Math.floor((level - 1) / 3))];
+  return band && band !== 'little' ? OLDER[t] || t : t;
+};
 
 /* Knowledge level in one subject, from the stars earned in it. */
 const SUBJECT_STEPS = [

@@ -4,7 +4,7 @@
             plus My levels (levels, tiers, real rewards), the treasure chest, and a Parent area
             behind a hold-and-PIN lock.
    ========================================================= */
-import { BANDS, loadState, saveState, resetState, speak, stopSpeech, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
+import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sayFirst, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
 import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
 import { mathsLevelOf, MATHS_LEVELS } from './games/maths.js';
@@ -154,14 +154,18 @@ function showWho() {
 }
 
 /* The top bar on a child's screens: back, name, streak, treasure progress, stars. */
-function childBar(child, onBack, backIcon = '🏠') {
+function childBar(child, onBack, backIcon = '⬅️', backLabel = 'Back') {
   const streak = streakOf(child);
   const n = Math.min(gamesToday(child), GAMES_FOR_CHEST);
   const chest = chestReady(child)
     ? el('button', { class: 'chip chest-chip ready', onclick: () => showChest(child.id) }, '🎁 Open!')
-    : el('span', { class: 'chip', title: 'Treasure chest' }, chestOpenedToday(child) ? '🎁 ✓' : `🎁 ${n}/${GAMES_FOR_CHEST}`);
+    : el('button', { class: 'chip chest-chip', 'aria-label': 'Treasure chest', onclick: () => {
+        // Tapping the gift says what it is for.
+        const line = chestOpenedToday(child) ? 'You opened today’s treasure. Come back tomorrow!' : 'Play three games in one day to open the treasure chest!';
+        sfx.tap(); toast(`🎁 ${line}`, 3200, 'low'); speak(line);
+      } }, chestOpenedToday(child) ? '🎁 ✓' : `🎁 ${n}/${GAMES_FOR_CHEST}`);
   return el('div', { class: 'topbar' },
-    el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: onBack }, backIcon),
+    el('button', { class: 'icon-btn', 'aria-label': backLabel, onclick: onBack }, backIcon),
     el('h1', { class: 'with-avatar' }, avatarEl(child, 'avatar-small'), child.name),
     streak > 1 ? el('span', { class: 'chip streak' }, `🔥 ${streak} days`) : null,
     chest,
@@ -180,7 +184,7 @@ function showGames(childId) {
     const games = subject.games.filter(g => g.bands.includes(child.band));
     const fresh = games.filter(g => !child.played[g.id]).length;
     return el('button', { class: `subject-card pop-in s-${subject.id}`, onclick: () => { sfx.tap(); showSubject(childId, subject.id); } },
-      el('span', { class: 'subject-pic', style: `background-image:url(img/art/bg-${subject.id}.jpg)` }),
+      el('span', { class: 'subject-pic', style: `background-image:url(img/thumb/bg-${subject.id}.jpg)` }),
       el('span', { class: 'subject-emoji' }, subject.emoji),
       el('span', { class: 'label' }, subject.name),
       el('span', { class: 'sub' }, `${games.length} game${games.length > 1 ? 's' : ''}`),
@@ -188,7 +192,7 @@ function showGames(childId) {
   });
   stagger(cards, 70);
   app.replaceChildren(
-    childBar(child, showWho),
+    childBar(child, showWho, '👥', 'Change player'),
     el('div', { class: 'home-row' },
       kasemSays('hi', `Hi ${child.name}! What shall we learn?`),
       keepPlaying(child)),
@@ -278,7 +282,7 @@ function showLevels(childId) {
         el('div', { class: 'level-big', style: `--tc:${tierInfo(tier).colour}` },
           el('span', { class: 'n' }, String(level)), el('span', { class: 'l' }, 'LEVEL')),
         el('div', { class: 'level-text' },
-          el('h2', {}, `${tierInfo(tier).icon} ${titleFor(level)}`),
+          el('h2', {}, `${tierInfo(tier).icon} ${titleFor(level, child.band)}`),
           bar(frac, 'big'),
           el('p', {}, `⭐ ${toNext} more stars to reach level ${level + 1}.`),
           el('p', { class: 'sub' }, `Reach level ${nextTierLevel} for a real reward: ${rewardFor(state, tier + 1)}`))),
@@ -389,6 +393,23 @@ function playGame(childId, gameId) {
   document.body.dataset.band = child.band;
   missed = [];
   let finished = false;
+  // Once a child has started playing, the back arrow asks before it quits.
+  let touches = 0;
+  root.addEventListener('pointerdown', () => { touches++; });
+  const leave = () => { finished = true; lives = null; trackGame(null); stopSpeech(); showSubject(childId, subject.id); };
+  const askLeave = () => {
+    if (touches < 3 || document.querySelector('.leave-ask')) return leave();
+    const close = () => box.remove();
+    const box = el('div', { class: 'leave-ask', role: 'dialog', 'aria-label': 'Stop playing?' },
+      el('div', { class: 'leave-card pop-in' },
+        kasem('think'),
+        el('h2', {}, 'Stop playing?'),
+        el('div', { class: 'row' },
+          el('button', { class: 'big-btn', onclick: () => { sfx.tap(); close(); } }, el('span', { class: 'btn-pic' }, '▶️'), 'Keep playing'),
+          el('button', { class: 'big-btn secondary', onclick: () => { close(); leave(); } }, el('span', { class: 'btn-pic' }, '🚪'), 'Stop'))));
+    document.body.append(box);
+    speak('Stop playing?');
+  };
   // Hearts: the older children get 3 tries per game; the 3-year-old never loses.
   lives = child.band !== 'little' && !game.noLives
     ? { left: MAX_LIVES, box: el('div', { class: 'hearts', 'aria-label': `${MAX_LIVES} hearts` }), lose: () => {
@@ -402,7 +423,7 @@ function playGame(childId, gameId) {
 
   app.replaceChildren(...[
     el('div', { class: 'topbar' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; lives = null; trackGame(null); stopSpeech(); showSubject(childId, subject.id); } }, '⬅️'),
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: askLeave }, '⬅️'),
       el('h1', { class: 'game-title' }, `${game.emoji} ${game.title}`),
       lives ? lives.box : null,
     ),
@@ -412,6 +433,7 @@ function playGame(childId, gameId) {
 
   trackGame(child, game, state);
   if (!game.noFit) fitStage(root);
+  if (child.band === 'little') sayFirst(game.title); // she can't read the tile
   game.start({
     root,
     child,

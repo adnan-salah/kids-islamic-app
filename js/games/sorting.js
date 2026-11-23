@@ -100,6 +100,8 @@ export default {
           sfx.tryAgain({ q: `${sort.q} ${name}`, answer: sort.groups.find(x => x[0] === group)[1] });
           wiggle(b);
           toast('Try again!');
+          // The 3-year-old gets shown where it goes after a miss.
+          if (band === 'little') bins.children[sort.groups.findIndex(x => x[0] === group)]?.classList.add('hint');
         }
       }
     }
