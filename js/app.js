@@ -13,6 +13,8 @@ import { levelOf, levelProgress, tierOf, tierInfo, titleFor, subjectLevel, stars
 
 const app = document.getElementById('app');
 let state = loadState();
+const applyCalm = () => document.body.classList.toggle('calm', !!state.calm); // parent switch: no bobbing or pulsing
+applyCalm();
 migrate();
 
 /* Older saves: work out level totals and tiers without giving
@@ -187,10 +189,22 @@ function showGames(childId) {
   stagger(cards, 70);
   app.replaceChildren(
     childBar(child, showWho),
-    kasemSays('hi', `Hi ${child.name}! What shall we learn?`),
+    el('div', { class: 'home-row' },
+      kasemSays('hi', `Hi ${child.name}! What shall we learn?`),
+      keepPlaying(child)),
     el('div', { class: 'subject-grid' }, cards),
   );
   speak('Pick a subject!');
+}
+
+/* The last two games this child played, one tap from the home screen. */
+function keepPlaying(child) {
+  const recent = (child.recent || []).map(id => GAMES.find(g => g.id === id)).filter(g => g && g.bands.includes(child.band));
+  if (!recent.length) return null;
+  return el('div', { class: 'keep-playing' },
+    el('span', { class: 'kp-label' }, '▶️ Keep playing'),
+    recent.map(g => el('button', { class: 'kp-btn', 'aria-label': `Keep playing ${g.title}`, onclick: () => { sfx.tap(); playGame(child.id, g.id); } },
+      el('span', { class: 'kp-emoji' }, g.emoji), el('span', { class: 'kp-title' }, g.title))));
 }
 
 /* ---------- Screen 2b: the games in one subject ---------- */
@@ -367,6 +381,8 @@ function playGame(childId, gameId) {
   const child = findChild(childId);
   const game = GAMES.find(g => g.id === gameId);
   const subject = subjectOf(gameId);
+  child.recent = [gameId, ...(child.recent || []).filter(id => id !== gameId)].slice(0, 2);
+  saveState(state);
   setBg(subject.id);
   usePraise(subject.id === 'islam');
   const root = el('div', { class: 'stage' });
@@ -585,6 +601,7 @@ function showParent() {
     ),
     hasPin() ? null : el('p', { class: 'pin-nudge' }, '🔒 No parent PIN is set yet, so this area is only protected by a sum. Set a PIN below to keep the children out.'),
     el('p', { class: 'note' }, 'Tap a picture to add a photo. Change names and age groups here too. Changes save straight away. Photos and progress stay on this tablet only.'),
+    overviewPanel(),
     el('div', { class: 'parent-list' }, state.children.map(child => {
       // Tap the picture to choose a photo (camera or gallery).
       const file = el('input', { type: 'file', accept: 'image/*', style: 'display:none' });
@@ -636,6 +653,7 @@ function showParent() {
     rewardsPanel(),
     pinPanel(),
     voicePanel(),
+    calmPanel(),
     el('div', {},
       el('button', { class: 'big-btn secondary', onclick: () => {
         if (confirmReset()) { resetState(); state = loadState(); showParent(); }
@@ -741,6 +759,41 @@ function showProgress(childId) {
     summary, focus, table, weekly, missedBox,
   );
   app.scrollTop = 0; window.scrollTo(0, 0);
+}
+
+/* All the children side by side: this week against last week. Tap a row for the full report. */
+function overviewPanel() {
+  const now = today();
+  const rows = state.children.map(child => {
+    const [tr, tw, tp] = sum(totals(child, daysAgo(6), now));
+    const [lr, lw] = sum(totals(child, daysAgo(13), daysAgo(7)));
+    const tP = pct(tr, tw), lP = pct(lr, lw);
+    const d = tP != null && lP != null ? tP - lP : null;
+    const trend = d == null ? '–' : d >= 3 ? `⬆️ ${d}%` : d <= -3 ? `⬇️ ${-d}%` : '➡️ same';
+    const weak = Object.entries(totals(child, daysAgo(27), now)).map(([g, [r, w]]) => ({ g, n: r + w, p: pct(r, w) }))
+      .filter(x => x.n >= 10 && x.p < 80).sort((a, b) => a.p - b.p)[0];
+    return el('tr', { class: 'overview-row', onclick: () => showProgress(child.id) },
+      el('td', {}, el('strong', {}, child.name)), el('td', {}, String(tp)), el('td', {}, String(tr)),
+      el('td', {}, tP == null ? '–' : `${tP}%`), el('td', {}, trend),
+      el('td', { class: 'game-cell' }, weak ? `${gameName(weak.g)} ${weak.p}%` : '–'),
+      el('td', {}, `Level ${levelOf(child.stars)}`));
+  });
+  return el('div', { class: 'parent-row report-box' },
+    el('h2', {}, '👨‍👩‍👧‍👦 This week at a glance'),
+    el('table', { class: 'report' },
+      el('thead', {}, el('tr', {}, ...['', 'Games', 'Right', 'Accuracy', 'vs last week', 'Needs practice', ''].map(h => el('th', {}, h)))),
+      el('tbody', {}, rows)),
+    el('p', { class: 'note', style: 'margin:0' }, 'Last 7 days. Tap a row for the full report.'));
+}
+
+/* Calm mode: stops the bobbing, pulsing and wobbling for a child who finds it too much. */
+function calmPanel() {
+  const box = el('input', { type: 'checkbox', style: 'width:1.8rem;height:1.8rem' });
+  box.checked = !!state.calm;
+  box.addEventListener('change', () => { state.calm = box.checked; saveState(state); applyCalm(); });
+  return el('div', { class: 'parent-row', style: 'flex-direction:column;align-items:stretch' },
+    el('strong', { style: 'font-size:1.4rem' }, '🧘 Calm mode'),
+    el('label', { style: 'display:flex;align-items:center;gap:.8rem;font-size:1.2rem' }, box, 'Turn off bobbing, pulsing and wobbling on every screen'));
 }
 
 /* Real-life rewards: what each tier earns, and who is waiting for theirs. */

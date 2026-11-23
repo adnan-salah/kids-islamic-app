@@ -519,7 +519,7 @@ body[data-bg="none"]    { background-image: linear-gradient(160deg, var(--cream)
 .tile .emoji { filter: drop-shadow(0 4px 2px #0002); }
 .tile.is-new .sub { color: #fff; background: var(--rose); padding: .15rem .8rem; border-radius: 999px; font-weight: 700; animation: pulse 1.4s ease-in-out infinite; }
 .option { border: 4px solid #fff; }
-.big-btn { background: linear-gradient(#14b8a6, var(--teal)); box-shadow: 0 6px 0 #115e59, 0 10px 20px #0002; }
+.big-btn { background: linear-gradient(#0e8f85, var(--teal)); box-shadow: 0 6px 0 #115e59, 0 10px 20px #0002; }
 .big-btn.secondary { background: #fff; box-shadow: 0 6px 0 #cbd5e1, 0 10px 20px #0002; }
 
 .pop-in { animation: popIn .45s cubic-bezier(.3, 1.5, .5, 1) backwards; }
@@ -589,7 +589,7 @@ body:has(.kasem-says) .buddy { display: none; }
 /* ---------- Chips: streak and treasure ---------- */
 .chip { background: #fff; border-radius: 999px; padding: .4rem 1rem; font-size: 1.4rem; font-weight: 700; box-shadow: var(--shadow); white-space: nowrap; }
 .chip.streak { background: #ffedd5; color: #c2410c; }
-.chest-chip.ready { background: var(--gold); color: #fff; animation: wobble 1.2s ease-in-out infinite; }
+.chest-chip.ready { background: var(--gold); color: #3b2500; animation: wobble 1.2s ease-in-out infinite; }
 
 /* ---------- Well done + treasure ---------- */
 .done-screen { position: relative; }
@@ -1051,3 +1051,22 @@ body[data-band="little"] .sort-bin .bin-label { font-size: 1.8rem; }
 @media (orientation: landscape) and (min-width: 1000px) {
   .slots + .cards { grid-template-columns: repeat(auto-fit, minmax(7.6rem, 1fr)); gap: .7rem; }
 }
+
+/* Calm mode (parent switch): same as the tablet's own "remove animations" setting */
+body.calm *, body.calm *::before, body.calm *::after { animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+body.calm :is(.badge-new, .tile.is-new .sub, .option.hint, .lab-test.pulse, .chest-chip.ready, .jump-in, .splash-kasem, .bob) { animation: none !important; }
+body.calm .option.hint { outline: 5px solid var(--gold); outline-offset: 3px; }
+
+/* Keep playing: the last two games, beside Kasem on the home screen */
+.home-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.keep-playing { display: flex; align-items: center; gap: .7rem; flex-shrink: 0; }
+.kp-label { font-size: 1.15rem; font-weight: 700; color: var(--teal); background: #fffd; border-radius: 999px; padding: .3rem .8rem; }
+.kp-btn { display: flex; align-items: center; gap: .5rem; min-height: 3.6rem; padding: .4rem 1.1rem; border-radius: 999px; background: #fff; color: var(--ink); font-size: 1.25rem; font-weight: 700; box-shadow: var(--shadow); }
+.kp-btn:active { transform: translateY(3px); }
+.kp-emoji { font-size: 2rem; line-height: 1; }
+body[data-band="little"] .kp-title, body[data-band="little"] .kp-label { display: none; }
+body[data-band="little"] .kp-btn { min-width: 5rem; justify-content: center; }
+body[data-band="little"] .kp-emoji { font-size: 2.6rem; }
+@media (max-width: 999px) { .kp-title, .kp-label { display: none; } .kp-btn { min-width: 4.2rem; justify-content: center; } }
+.overview-row { cursor: pointer; }
+.overview-row:active { background: var(--teal-light); }

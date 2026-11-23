@@ -28,9 +28,9 @@ export function levelProgress(stars) {
 export const LEVELS_PER_TIER = 5;
 export const TIERS = [
   { name: 'Bronze', icon: '🥉', colour: '#cd7f32' },
-  { name: 'Silver', icon: '🥈', colour: '#9ca3af' },
-  { name: 'Gold', icon: '🥇', colour: '#f59e0b' },
-  { name: 'Diamond', icon: '💎', colour: '#38bdf8' },
+  { name: 'Silver', icon: '🥈', colour: '#6b7280' },
+  { name: 'Gold', icon: '🥇', colour: '#d97706' },
+  { name: 'Diamond', icon: '💎', colour: '#0284c7' },
   { name: 'Crown', icon: '👑', colour: '#a855f7' },
   { name: 'Legend', icon: '🌟', colour: '#ef4444' },
 ];
