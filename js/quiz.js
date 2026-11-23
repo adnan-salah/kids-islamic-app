@@ -62,7 +62,7 @@ export function runQuiz(root, questions, onDone, { shuffleOptions = true } = {})
         });
       } else {
         mistakes++;
-        sfx.tryAgain();
+        sfx.tryAgain({ answer: q.answer });
         wiggle(btn);
         toast('Try again!');
       }

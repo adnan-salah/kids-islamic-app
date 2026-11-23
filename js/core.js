@@ -171,6 +171,8 @@ function tone(freq, start, length, type = 'sine', volume = 0.18) {
 
 /* "right" and "try again" also tell Kasem (the corner buddy) to react. */
 const mood = m => document.dispatchEvent(new CustomEvent('kasem', { detail: m }));
+/* Every right or wrong answer is also an 'answer' event, which stats.js counts. */
+const answered = (ok, info) => document.dispatchEvent(new CustomEvent('answer', { detail: { ok, info } }));
 
 /* A quick upward or downward slide in pitch (for pops and whooshes). */
 function slide(from, to, length, type = 'sine', volume = 0.15) {
@@ -190,8 +192,8 @@ function slide(from, to, length, type = 'sine', volume = 0.15) {
 
 export const sfx = {
   tap()     { tone(660, 0, 0.12, 'triangle', 0.1); },
-  right()   { tone(784, 0, 0.18); tone(1047, 0.12, 0.3); mood('right'); },
-  tryAgain(){ tone(330, 0, 0.2, 'triangle', 0.12); tone(294, 0.15, 0.25, 'triangle', 0.12); mood('wrong'); },
+  right(info)   { tone(784, 0, 0.18); tone(1047, 0.12, 0.3); mood('right'); answered(true, info); },
+  tryAgain(info){ tone(330, 0, 0.2, 'triangle', 0.12); tone(294, 0.15, 0.25, 'triangle', 0.12); mood('wrong'); answered(false, info); },
   win()     { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.4)); },
   pop()     { slide(900, 1800, 0.08, 'square', 0.06); tone(1400, 0.03, 0.12, 'sine', 0.08); },
   whoosh()  { slide(300, 1200, 0.35, 'sawtooth', 0.04); },

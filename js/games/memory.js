@@ -13,6 +13,7 @@ const PICTURES = ['🐱', '🐶', '🦁', '🐸', '🐵', '🐼', '🦊', '🐢'
 
 export default {
   id: 'memory',
+  noStats: true, // matching pairs has no wrong answers
   title: 'Memory Match',
   emoji: '🃏',
   bands: ['little', 'explorer', 'champion'],

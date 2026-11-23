@@ -32,6 +32,7 @@ export default {
   id: 'jigsaw',
   title: 'Jigsaw Fun',
   emoji: '🧩',
+  noStats: true, // no right or wrong answers to count
   noLives: true, // a misplaced piece is not a wrong answer
   bands: ['little', 'explorer', 'champion'],
 

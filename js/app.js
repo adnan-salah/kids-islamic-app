@@ -7,6 +7,7 @@
 import { BANDS, loadState, saveState, resetState, speak, stopSpeech, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
 import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
+import { trackGame, totals, daysAgo, today, missedSince } from './stats.js';
 import { levelOf, levelProgress, tierOf, tierInfo, titleFor, subjectLevel, starsIn, checkLevels, pendingRewards, rewardFor, DEFAULT_REWARDS, LEVELS_PER_TIER, starsForLevel } from './levels.js';
 
 const app = document.getElementById('app');
@@ -372,6 +373,7 @@ function playGame(childId, gameId) {
     ? { left: MAX_LIVES, box: el('div', { class: 'hearts', 'aria-label': `${MAX_LIVES} hearts` }), lose: () => {
         if (finished) return;
         finished = true;
+        trackGame(null);
         showLost(childId, gameId);
       } }
     : null;
@@ -379,7 +381,7 @@ function playGame(childId, gameId) {
 
   app.replaceChildren(...[
     el('div', { class: 'topbar' },
-      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; lives = null; stopSpeech(); showSubject(childId, subject.id); } }, '⬅️'),
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: () => { finished = true; lives = null; trackGame(null); stopSpeech(); showSubject(childId, subject.id); } }, '⬅️'),
       el('h1', { class: 'game-title' }, `${game.emoji} ${game.title}`),
       lives ? lives.box : null,
     ),
@@ -387,6 +389,7 @@ function playGame(childId, gameId) {
     game.noBuddy ? null : buddy(),
   ].filter(Boolean));
 
+  trackGame(child, game, state);
   game.start({
     root,
     child,
@@ -396,6 +399,7 @@ function playGame(childId, gameId) {
       if (finished) return; // child left the game early
       finished = true;
       lives = null;
+      trackGame(null);
       // Save progress: add the stars, remember the best score for this game.
       const before = child.stars;
       child.stars += stars;
@@ -575,7 +579,9 @@ function showParent() {
         }));
       maths.addEventListener('change', () => { child.maths = maths.value || undefined; saveState(state); });
       return el('div', { class: 'parent-row' },
-        avatarBtn, file, name, band, maths, emojiBtn, el('span', { class: 'note' }, `⭐ ${child.stars} · Level ${levelOf(child.stars)}`));
+        avatarBtn, file, name, band, maths, emojiBtn,
+        el('button', { class: 'big-btn small-btn', onclick: () => showProgress(child.id) }, '📊 Progress'),
+        el('span', { class: 'note' }, `⭐ ${child.stars} · Level ${levelOf(child.stars)}`));
     })),
     rewardsPanel(),
     pinPanel(),
@@ -585,6 +591,106 @@ function showParent() {
         if (confirmReset()) { resetState(); state = loadState(); showParent(); }
       } }, 'Reset all progress')),
   );
+}
+
+/* ---------- Progress report (parent area) ----------
+   Right and wrong answers counted by stats.js, per game and per day.
+   "Right" is answers right, "mistakes" is wrong taps, so accuracy is
+   right / (right + mistakes). Only games with right/wrong answers count. */
+const pct = (r, w) => (r + w ? Math.round((100 * r) / (r + w)) : null);
+const sum = obj => Object.values(obj).reduce((t, [r, w, p]) => [t[0] + r, t[1] + w, t[2] + p], [0, 0, 0]);
+const gameName = id => { const g = GAMES.find(x => x.id === id); return g ? `${g.emoji} ${g.title}` : id; };
+
+function showProgress(childId) {
+  const child = findChild(childId);
+  const now = today();
+  const thisWeek = totals(child, daysAgo(6), now);
+  const lastWeek = totals(child, daysAgo(13), daysAgo(7));
+  const month = totals(child, daysAgo(27), now);
+  const [tr, tw, tp] = sum(thisWeek), [lr, lw, lp] = sum(lastWeek);
+  const tPct = pct(tr, tw), lPct = pct(lr, lw);
+
+  const card = (label, value, sub) => el('div', { class: 'stat-card' },
+    el('div', { class: 'stat-label' }, label), el('div', { class: 'stat-value' }, value), sub ? el('div', { class: 'note' }, sub) : null);
+  let trend = 'Not enough to compare yet';
+  if (tPct != null && lPct != null) {
+    const d = tPct - lPct;
+    trend = d >= 3 ? `⬆️ Up ${d}% on last week` : d <= -3 ? `⬇️ Down ${-d}% on last week` : '➡️ About the same as last week';
+  }
+  const summary = el('div', { class: 'stat-cards' },
+    card('This week: questions right', String(tr), `${tw} mistakes · ${tp} games played`),
+    card('This week: accuracy', tPct == null ? '–' : `${tPct}%`, trend),
+    card('Last week', lPct == null ? '–' : `${lPct}%`, `${lr} right · ${lw} mistakes · ${lp} games`));
+
+  // Needs practice / doing well, from the last 4 weeks (games with at least 10 answers).
+  const ranked = Object.entries(month).map(([g, [r, w]]) => ({ g, r, w, p: pct(r, w) }))
+    .filter(x => x.r + x.w >= 10).sort((a, b) => a.p - b.p);
+  const weak = ranked.filter(x => x.p < 80).slice(0, 3);
+  const strong = ranked.filter(x => x.p >= 90).reverse().slice(0, 3);
+  const chips = (list, cls) => list.map(x => el('span', { class: `chip ${cls}` }, `${gameName(x.g)} ${x.p}%`));
+  const focus = el('div', { class: 'parent-row report-box' },
+    el('h2', {}, '🎯 Needs practice'),
+    el('div', { class: 'chips' }, weak.length ? chips(weak, 'weak') : el('span', { class: 'note' }, ranked.length ? 'Nothing under 80%. Great work!' : 'Needs a few more games first (10+ answers in a game).')),
+    el('h2', {}, '🌟 Doing well'),
+    el('div', { class: 'chips' }, strong.length ? chips(strong, 'strong') : el('span', { class: 'note' }, 'Nothing at 90% or above yet.')));
+
+  // Each subject and game: last 4 weeks, this week, last week.
+  const bar = p => el('div', { class: 'bar' }, el('span', { style: `width:${p ?? 0}%;background:${p == null ? '#cbd5e1' : p >= 85 ? 'var(--green)' : p >= 70 ? 'var(--gold)' : '#ef4444'}` }));
+  const cell = (r, w) => { const p = pct(r, w); return p == null ? '–' : `${p}%`; };
+  const rows = [];
+  for (const sub of SUBJECTS) {
+    const ids = sub.games.filter(g => !g.noStats).map(g => g.id);
+    const m = ids.map(id => month[id] || [0, 0, 0]);
+    const [mr, mw, mp] = m.reduce((t, x) => [t[0] + x[0], t[1] + x[1], t[2] + x[2]], [0, 0, 0]);
+    if (!mp && !mr && !mw) continue;
+    const tw2 = ids.map(id => thisWeek[id] || [0, 0]).reduce((t, x) => [t[0] + x[0], t[1] + x[1]], [0, 0]);
+    const lw2 = ids.map(id => lastWeek[id] || [0, 0]).reduce((t, x) => [t[0] + x[0], t[1] + x[1]], [0, 0]);
+    rows.push(el('tr', { class: 'subject-row' }, el('td', {}, `${sub.emoji} ${sub.name}`), el('td', {}, String(mr + mw)),
+      el('td', {}, bar(pct(mr, mw)), cell(mr, mw)), el('td', {}, cell(...tw2)), el('td', {}, cell(...lw2))));
+    for (const id of ids) {
+      const [r, w, p] = month[id] || [0, 0, 0];
+      if (!r && !w && !p) continue;
+      rows.push(el('tr', {}, el('td', { class: 'game-cell' }, gameName(id)), el('td', {}, String(r + w)),
+        el('td', {}, bar(pct(r, w)), cell(r, w)), el('td', {}, cell(...(thisWeek[id] || [0, 0]))), el('td', {}, cell(...(lastWeek[id] || [0, 0])))));
+    }
+  }
+  const table = el('div', { class: 'parent-row report-box' },
+    el('h2', {}, '📚 By subject and game (last 4 weeks)'),
+    rows.length ? el('table', { class: 'report' },
+      el('thead', {}, el('tr', {}, ...['', 'Answers', 'Accuracy', 'This week', 'Last week'].map(h => el('th', {}, h)))),
+      el('tbody', {}, rows)) : el('p', { class: 'note' }, 'No games played yet.'));
+
+  // Week by week, last 4 weeks.
+  const weeks = [0, 1, 2, 3].map(i => {
+    const from = daysAgo(7 * i + 6), to = daysAgo(7 * i);
+    const [r, w, p] = sum(totals(child, from, to));
+    const label = i === 0 ? 'This week' : i === 1 ? 'Last week' : `${i} weeks ago`;
+    return el('tr', {}, el('td', {}, label), el('td', {}, String(p)), el('td', {}, String(r)), el('td', {}, String(w)), el('td', {}, bar(pct(r, w)), cell(r, w)));
+  });
+  const weekly = el('div', { class: 'parent-row report-box' },
+    el('h2', {}, '📅 Week by week'),
+    el('table', { class: 'report' },
+      el('thead', {}, el('tr', {}, ...['', 'Games', 'Right', 'Mistakes', 'Accuracy'].map(h => el('th', {}, h)))),
+      el('tbody', {}, weeks)));
+
+  // Questions missed most (last 4 weeks).
+  const missed = missedSince(child, daysAgo(27)).slice(0, 12);
+  const missedBox = el('div', { class: 'parent-row report-box' },
+    el('h2', {}, '❌ Questions missed most (last 4 weeks)'),
+    missed.length ? el('table', { class: 'report' },
+      el('thead', {}, el('tr', {}, ...['Question', 'Right answer', 'Missed', 'Game'].map(h => el('th', {}, h)))),
+      el('tbody', {}, missed.map(m => el('tr', {}, el('td', {}, m.q), el('td', {}, m.answer ?? '–'), el('td', {}, `${m.n}×`), el('td', { class: 'game-cell' }, gameName(m.gameId))))))
+      : el('p', { class: 'note' }, 'No missed questions yet.'));
+
+  app.replaceChildren(
+    el('div', { class: 'topbar' },
+      el('button', { class: 'icon-btn', 'aria-label': 'Back', onclick: showParent }, '⬅️'),
+      el('h1', {}, `📊 ${child.name}'s progress`),
+    ),
+    el('p', { class: 'note' }, 'Counts every right answer and every mistake in games with questions (not colouring, drawing, jigsaw or memory). Kept on this tablet only.'),
+    summary, focus, table, weekly, missedBox,
+  );
+  app.scrollTop = 0; window.scrollTo(0, 0);
 }
 
 /* Real-life rewards: what each tier earns, and who is waiting for theirs. */

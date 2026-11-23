@@ -29,6 +29,7 @@ const GOAL = 3; // duas to learn in one round
 
 export default {
   id: 'duas',
+  noStats: true, // listen and learn, no wrong answers
   title: 'Dua Time',
   emoji: '🤲',
   bands: ['little', 'explorer', 'champion'],

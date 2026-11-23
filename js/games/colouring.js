@@ -32,6 +32,7 @@ export default {
   id: 'colouring',
   title: 'Colour In',
   emoji: '🖍️',
+  noStats: true, // no right or wrong answers to count
   noLives: true,
   noBuddy: true,
   bands: ['little', 'explorer', 'champion'],

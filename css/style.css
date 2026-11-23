@@ -859,3 +859,23 @@ body[data-bg] { background-attachment: fixed; background-size: cover; background
 .gallery-viewer { position: fixed; inset: 0; background: #000c; display: grid; place-items: center; z-index: 61; }
 .gallery-viewer[hidden] { display: none; }
 .gallery-big { max-width: 94vw; max-height: 90dvh; border-radius: 20px; background: #fff; }
+
+/* ---------- Progress report (parent area) ---------- */
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+.stat-card { background: #fff; border-radius: var(--radius); padding: 1rem 1.2rem; box-shadow: var(--shadow); }
+.stat-label { font-weight: 700; color: var(--soft); }
+.stat-value { font-size: 2.6rem; font-weight: 800; }
+.report-box { flex-direction: column; align-items: stretch; }
+.report-box h2 { margin: 0.2rem 0; font-size: 1.4rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.chip { padding: 0.4rem 0.9rem; border-radius: 999px; font-weight: 700; font-size: 1.15rem; }
+.chip.weak { background: #fee2e2; color: #991b1b; }
+.chip.strong { background: #dcfce7; color: #166534; }
+.report { width: 100%; border-collapse: collapse; font-size: 1.1rem; }
+.report th { text-align: left; color: var(--soft); font-weight: 700; padding: 0.4rem; border-bottom: 2px solid #e2e8f0; }
+.report td { padding: 0.45rem 0.4rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.report .subject-row td { font-weight: 800; background: #f8fafc; }
+.report .game-cell { padding-left: 1.4rem; }
+.report .bar { display: inline-block; width: 6rem; height: 0.8rem; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-right: 0.5rem; vertical-align: middle; }
+.report .bar span { display: block; height: 100%; }
+@media (max-width: 900px) { .report .bar { width: 3.5rem; } .report { font-size: 1rem; } }

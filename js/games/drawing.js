@@ -39,6 +39,7 @@ export default {
   id: 'drawing',
   title: 'Draw & Paint',
   emoji: '✏️',
+  noStats: true, // no right or wrong answers to count
   noLives: true,
   noBuddy: true,
   bands: ['little', 'explorer', 'champion'],
