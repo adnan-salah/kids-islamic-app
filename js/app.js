@@ -7,6 +7,7 @@
 import { BANDS, loadState, saveState, resetState, speak, stopSpeech, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
 import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
+import { mathsLevelOf, MATHS_LEVELS } from './games/maths.js';
 import { trackGame, totals, daysAgo, today, missedSince } from './stats.js';
 import { levelOf, levelProgress, tierOf, tierInfo, titleFor, subjectLevel, starsIn, checkLevels, pendingRewards, rewardFor, DEFAULT_REWARDS, LEVELS_PER_TIER, starsForLevel } from './levels.js';
 
@@ -393,8 +394,8 @@ function playGame(childId, gameId) {
   game.start({
     root,
     child,
-    band: mathsBand(child, subject),
-    harder: subject.id === 'maths' && child.maths === 'harder',
+    band: mathsBand(child, subject, gameId),
+    harder: subject.id === 'maths' && child.band !== 'little' && mathsLevelOf(child) === 3,
     finish(stars, message) {
       if (finished) return; // child left the game early
       finished = true;
@@ -456,11 +457,11 @@ function showLost(childId, gameId) {
   speak('Out of hearts! Take your time and try again.');
 }
 
-/* Maths can be set harder per child in the parent area, since the
-   6 and 7 year olds share a band but not the same maths level.
-   'harder' = Explorer+ questions, 'champion' = the Champions' maths. */
-function mathsBand(child, subject) {
-  if (subject.id === 'maths' && child.maths === 'champion') return 'champion';
+/* Each child has their own maths level (games/maths.js), which moves
+   up and down by itself and can be set in the parent area. Maths Fun
+   uses it directly; Sports Maths and Time & Money follow it too. */
+function mathsBand(child, subject, gameId) {
+  if (subject.id === 'maths' && child.band !== 'little' && gameId !== 'maths') return mathsLevelOf(child) >= 4 ? 'champion' : 'explorer';
   return child.band;
 }
 
@@ -572,12 +573,12 @@ function showParent() {
         }));
       band.addEventListener('change', () => { child.band = band.value; saveState(state); });
       const maths = el('select', { 'aria-label': 'Maths level' },
-        [['', 'Maths: same as age group'], ['harder', 'Maths: harder'], ['champion', 'Maths: hardest (Champions)']].map(([id, label]) => {
-          const o = el('option', { value: id }, label);
-          if (id === (child.maths || '')) o.selected = true;
+        child.band === 'little' ? [['1', 'Maths: Little Stars']] : Object.entries(MATHS_LEVELS).map(([id, label]) => {
+          const o = el('option', { value: id }, `Maths now: ${label}`);
+          if (+id === mathsLevelOf(child)) o.selected = true;
           return o;
         }));
-      maths.addEventListener('change', () => { child.maths = maths.value || undefined; saveState(state); });
+      maths.addEventListener('change', () => { child.mathsLevel = +maths.value; child.mathsTrend = 0; saveState(state); });
       return el('div', { class: 'parent-row' },
         avatarBtn, file, name, band, maths, emojiBtn,
         el('button', { class: 'big-btn small-btn', onclick: () => showProgress(child.id) }, '📊 Progress'),

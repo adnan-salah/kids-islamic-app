@@ -10,6 +10,7 @@
                 seasons. 12 questions.
    ========================================================= */
 import { shuffle, pick } from '../core.js';
+import { freshPick } from '../fresh.js';
 import { runQuiz, starsFrom } from '../quiz.js';
 import { createGlobe, byId, theName } from '../globe.js';
 import { FACTS, WORLD_QS, NO_CAPITAL_Q, NO_CONTINENT_Q } from '../../data/geo-facts.js';
@@ -56,18 +57,18 @@ export default {
   bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
-    const { root, band } = ctx;
+    const { root, band, child } = ctx;
     const max = LEVEL[band];
     let questions;
     if (band === 'little') {
-      questions = shuffle(WORLD_QS.filter(q => q.level === 1)).slice(0, 5).map(q => worldQ(q, 2));
+      questions = freshPick(child, 'worldquiz-1', WORLD_QS.filter(q => q.level === 1), 5).map(q => worldQ(q, 2));
     } else {
       const n = band === 'champion' ? 4 : 3;
       const ids = Object.keys(FACTS).filter(id => FACTS[id].level <= max && byId(id));
-      const contIds = shuffle(ids.filter(id => !NO_CONTINENT_Q.includes(id) && (band === 'champion' || FACTS[id].level <= 2)));
-      const capIds = shuffle(ids.filter(id => !NO_CAPITAL_Q.includes(id) && byId(id).c.capital
-        && (band === 'champion' ? FACTS[id].level >= 2 : FACTS[id].level === 1 || Math.random() < 0.3)));
-      const facts = shuffle(WORLD_QS.filter(q => q.level <= max && (band !== 'champion' || q.level >= 2)));
+      const contIds = freshPick(child, `worldquiz-cont-${band}`, ids.filter(id => !NO_CONTINENT_Q.includes(id) && (band === 'champion' || FACTS[id].level <= 2)), 6);
+      const capIds = freshPick(child, `worldquiz-cap-${band}`, ids.filter(id => !NO_CAPITAL_Q.includes(id) && byId(id).c.capital
+        && (band === 'champion' ? FACTS[id].level >= 2 : FACTS[id].level === 1 || FACTS[id].level === 2)), 6);
+      const facts = freshPick(child, `worldquiz-facts-${band}`, WORLD_QS.filter(q => q.level <= max && (band !== 'champion' || q.level >= 2)), 6);
       const count = band === 'champion' ? 12 : 10;
       const mix = [];
       for (let i = 0; mix.length < count; i++) {

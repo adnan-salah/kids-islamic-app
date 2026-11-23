@@ -11,9 +11,12 @@
      harder   (Explorer set to "harder" in the parent area, Year 3-4) -
               add and take away to 1,000, all tables to 10, sharing
               (division), fractions of amounts, perimeter.
-     champion (age 9, Year 5-6) - multiplying and dividing bigger
+     year 4-5 (level 4, where Champions start)
+     champion (level 5, Year 5-6) - multiplying and dividing bigger
               numbers, remainders, fractions, decimals, percentages,
               area, negative numbers, factors, primes, order of operations.
+   Each child has their own maths level that moves up after two perfect
+   games and down after two hard ones (see mathsLevelOf).
    Questions are made up fresh each game, so it never gets stale.
    Rakah counts used (fard): Fajr 2, Dhuhr 4, Asr 4, Maghrib 3, Isha 4.
    ========================================================= */
@@ -95,6 +98,31 @@ function harderQuestion() {
   }
 }
 
+/* ---------- Year 4-5 (between Harder Explorers and Champions) ---------- */
+function challengerQuestion() {
+  const name = pick(NAMES);
+  const N = 4;
+  switch (rand(1, 15)) {
+    case 1: { const a = rand(6, 12), b = rand(6, 12); return q(`${a} × ${b} = ?`, '✖️', a * b, 8, 1, N); }
+    case 2: { const b = rand(6, 12), ans = rand(4, 12); return q(`${b * ans} ÷ ${b} = ?`, '➗', ans, 3, 1, N); }
+    case 3: { const a = rand(14, 39), b = rand(3, 6); return q(`${a} × ${b} = ?`, '✖️', a * b, 10, 1, N, `${a} × ${b}: ${Math.floor(a / 10) * 10} × ${b} = ${Math.floor(a / 10) * 10 * b}, plus ${a % 10} × ${b} = ${(a % 10) * b}.`); }
+    case 4: { const a = rand(1200, 4800), b = rand(1100, 4500); return q(`${a} + ${b} = ?`, '➕', a + b, 100, 1, N); }
+    case 5: { const a = rand(2000, 9000), b = rand(500, a - 500); return q(`${a} − ${b} = ?`, '➖', a - b, 100, 1, N); }
+    case 6: { const d = pick([3, 4, 5, 6, 8, 10]), n = d * rand(3, 12); return q(`What is 1/${d} of ${n}?`, '🍰', n / d, 4, 1, N, `Share ${n} into ${d} equal parts: ${n / d} in each.`); }
+    case 7: { const d = pick([2, 3, 4, 5]), m = pick([2, 3, 4]); return qText(`Which fraction is the same as 1/${d}?`, '🍕', `${m}/${d * m}`, [`${m}/${d + m}`, `1/${d * m}`, `${d}/${m}`], `Multiply the top and bottom by ${m}: 1/${d} = ${m}/${d * m}.`); }
+    case 8: { const a = rand(11, 49) / 10, b = rand(11, 39) / 10; return qText(`${a.toFixed(1)} + ${b.toFixed(1)} = ?`, '🔟', (a + b).toFixed(1), [(a + b + 1).toFixed(1), (a + b - 0.1).toFixed(1), (a + b + 0.2).toFixed(1)]); }
+    case 9: { const n = rand(110, 990); return q(`Round ${n} to the nearest hundred.`, '🎯', Math.round(n / 100) * 100, 200, 0, N); }
+    case 10: { const w = rand(3, 10), h = rand(2, 8); return Math.random() < 0.5
+      ? q(`A rectangle is ${w} cm long and ${h} cm wide. What is its area?`, '🟩', w * h, 6, 1, N, `Area = ${w} × ${h} = ${w * h} square cm.`)
+      : q(`A rectangle is ${w} cm long and ${h} cm wide. What is its perimeter?`, '▭', 2 * (w + h), 6, 4, N, `${w} + ${h} + ${w} + ${h} = ${2 * (w + h)} cm.`); }
+    case 11: { const price = rand(2, 9) + pick([0.5, 0.2, 0.8, 0.4]); const ans = 20 - price; return qText(`${name} buys lunch for ${dollars(price)} and pays with a $20 note. How much change?`, '💵', dollars(ans), [dollars(ans + 1), dollars(ans - 0.5), dollars(ans + 0.1)]); }
+    case 12: { const packs = rand(4, 9), each = rand(6, 12); return q(`${name} has ${packs} boxes with ${each} pencils in each. How many pencils?`, '✏️', packs * each, 8, 1, N); }
+    case 13: { const each = rand(4, 9), kids = rand(3, 8), left = rand(1, Math.min(each, kids) - 1 || 1); return q(`${kids * each + left} stickers are shared equally by ${kids} children. How many are left over?`, '⭐', left, 2, 0, N, `Each gets ${each}, and ${left} are left over.`); }
+    case 14: { const h = rand(1, 10), m = pick([5, 15, 20, 35, 45]), len = pick([40, 50, 75, 90]); const t = (hh, mm) => `${hh + Math.floor(mm / 60)}:${String(mm % 60).padStart(2, '0')}`; return qText(`A movie starts at ${t(h, m)} and goes for ${len} minutes. When does it finish?`, '🎬', t(h, m + len), [t(h, m + len + 10), t(h, m + len - 5), t(h + 1, m)]); }
+    default: { const start = rand(2, 30), step = pick([3, 4, 6, 7, 9, 11]); return q(`What comes next? ${start}, ${start + step}, ${start + 2 * step}, ${start + 3 * step}, …`, '👣', start + 4 * step, step, 0, N); }
+  }
+}
+
 /* ---------- Champions (Year 5-6) ---------- */
 function championQuestion() {
   const name = pick(NAMES);
@@ -126,17 +154,61 @@ export default {
   bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
-    const { root, band } = ctx;
-    const make = band === 'explorer' && ctx.harder ? harderQuestion
-      : { little: littleQuestion, explorer: explorerQuestion, champion: championQuestion }[band];
-    const count = band === 'little' ? 6 : band === 'champion' ? 12 : 10;
+    const { root, band, child } = ctx;
+    // Each child has a maths level (1 to 5) that moves up and down by itself.
+    const level = band === 'little' ? 1 : mathsLevelOf(child);
+    const MAKERS = [null, littleQuestion, explorerQuestion, harderQuestion, challengerQuestion, championQuestion];
+    const count = band === 'little' ? 6 : level >= 4 ? 12 : 10;
+    // The first two questions are a level easier, as a warm-up.
+    const make = i => (i < 2 && level > 2 ? MAKERS[level - 1] : MAKERS[level])();
     // Never the same question twice in one game.
     const seen = new Set(), questions = [];
-    for (let i = 0; questions.length < count && i < 200; i++) {
-      const x = make();
+    for (let i = 0; questions.length < count && i < 300; i++) {
+      const x = make(questions.length);
       if (!seen.has(x.prompt)) { seen.add(x.prompt); questions.push(x); }
     }
-    runQuiz(root, questions, mistakes =>
-      ctx.finish(starsFrom(mistakes, band), 'You are a maths star!'), { shuffleOptions: false });
+    // Losing all hearts counts as a hard game: listen for the third mistake.
+    let wrong = 0;
+    const onAnswer = e => {
+      if (!root.isConnected) { document.removeEventListener('answer', onAnswer); return; }
+      if (!e.detail.ok && ++wrong === 3 && band !== 'little') { adjust(child, -1); document.removeEventListener('answer', onAnswer); }
+    };
+    document.addEventListener('answer', onAnswer);
+    runQuiz(root, questions, mistakes => {
+      document.removeEventListener('answer', onAnswer);
+      let msg = 'You are a maths star!';
+      if (band !== 'little') {
+        const moved = adjust(child, mistakes === 0 ? 1 : mistakes >= 3 ? -1 : 0);
+        if (moved > 0) msg = 'Level up! Your maths is getting harder!';
+      }
+      ctx.finish(starsFrom(mistakes, band), msg);
+    }, { shuffleOptions: false });
   },
 };
+
+/* ---------- Maths level for each child ----------
+   1 Little Stars, 2 Year 2-3, 3 Year 3-4, 4 Year 4-5, 5 Year 5-6.
+   Two perfect games in a row: up a level. Two hard games (3 mistakes,
+   or out of hearts): down a level. */
+export const MATHS_LEVELS = { 2: 'Year 2-3', 3: 'Year 3-4', 4: 'Year 4-5', 5: 'Year 5-6' };
+export function mathsLevelOf(child) {
+  if (child.band === 'little') return 1;
+  if (!child.mathsLevel) {
+    child.mathsLevel = child.maths === 'champion' ? 5 : child.maths === 'harder' ? 3 : child.band === 'champion' ? 4 : 2;
+    delete child.maths;
+  }
+  return child.mathsLevel;
+}
+function adjust(child, step) {
+  const lv = mathsLevelOf(child);
+  if (!step) return 0;
+  const prev = child.mathsTrend || 0;
+  const t = Math.sign(prev) === step ? prev + step : step;
+  if (Math.abs(t) >= 2 && lv + step >= 2 && lv + step <= 5) {
+    child.mathsLevel = lv + step;
+    child.mathsTrend = 0;
+    return step;
+  }
+  child.mathsTrend = t;
+  return 0;
+}

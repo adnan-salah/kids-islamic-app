@@ -6,6 +6,7 @@
      explorer - which country has this flag? (3 choices)
      champion - harder flags, 4 choices, and "which is the flag of …?"
    ========================================================= */
+import { freshPick } from '../fresh.js';
 import { el, shuffle, pick } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
 import { byId, theName } from '../globe.js';
@@ -25,11 +26,11 @@ export default {
   bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
-    const { root, band } = ctx;
+    const { root, band, child } = ctx;
     let questions;
     if (band === 'little') {
       const ids = pool(1);
-      questions = shuffle(ids).slice(0, 6).map(id => ({
+      questions = freshPick(child, 'flags-1', ids, 6).map(id => ({
         prompt: 'Find the same flag!',
         picNode: el('div', { class: 'flag-big' }, flagOf(id)),
         options: [flagOf(id), ...shuffle(ids.filter(x => x !== id)).slice(0, 2).map(flagOf)],
@@ -42,8 +43,8 @@ export default {
       const ids = pool(max);
       const n = band === 'champion' ? 4 : 3;
       const chosen = band === 'champion'
-        ? shuffle(ids.filter(id => FACTS[id].level >= 2)).slice(0, 10)
-        : shuffle(ids).slice(0, 10);
+        ? freshPick(child, 'flags-champion', ids.filter(id => FACTS[id].level >= 2), 10)
+        : freshPick(child, 'flags-explorer', ids, 10);
       questions = chosen.map((id, i) => {
         const others = shuffle(ids.filter(x => x !== id)).slice(0, n - 1);
         const fact = `That is ${theName(byId(id).c)}.`;

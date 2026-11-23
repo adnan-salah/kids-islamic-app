@@ -9,6 +9,8 @@
      g.mark(id, kind)          - colour a country: 'target' | 'right' | 'wrong' | 'found' | null
      g.clearMarks()
      g.label(id)               - show a name label on a country (null to hide)
+     g.spot([lon, lat])        - a red ring on a spot, e.g. in an ocean (null to hide)
+     g.spinTo([lon, lat])      - spinTo also takes a place instead of a country id
      g.autoSpin(on)            - slowly turn by itself
    ========================================================= */
 import { geoOrthographic, geoPath, geoContains, geoCentroid, geoGraticule10, geoInterpolate, geoArea } from '../vendor/d3-geo.js';
@@ -60,7 +62,7 @@ export function createGlobe({ onTap, size = 520, controls = true } = {}) {
   const feats = features();
 
   let rot = [-134, 25, 0]; // start looking at Australia and Asia
-  let zoom = 1, spin = false, labelId = null, alive = true;
+  let zoom = 1, spin = false, labelId = null, spotLL = null, alive = true;
   let vel = 0; // spin speed after a flick (degrees per frame)
   const marks = new Map();
   let w = size, dpr = 1;
@@ -103,6 +105,13 @@ export function createGlobe({ onTap, size = 520, controls = true } = {}) {
       if (!p || !visible(centreOf(id))) continue;
       ctx.beginPath(); ctx.arc(p[0], p[1], 14, 0, Math.PI * 2);
       ctx.strokeStyle = MARK[m]; ctx.lineWidth = 4; ctx.stroke();
+    }
+    // A pulsing red ring on a spot in the sea (for "find the ocean" hints).
+    if (spotLL && visible(spotLL)) {
+      const p = proj(spotLL);
+      ctx.beginPath(); ctx.arc(p[0], p[1], 26, 0, Math.PI * 2);
+      ctx.strokeStyle = MARK.target; ctx.lineWidth = 6; ctx.stroke();
+      ctx.beginPath(); ctx.arc(p[0], p[1], 8, 0, Math.PI * 2); ctx.fillStyle = MARK.target; ctx.fill();
     }
     // Shine on the edge, so it looks round.
     const s = ctx.createRadialGradient(w / 2, w / 2, r * 0.75, w / 2, w / 2, r);
@@ -212,7 +221,7 @@ export function createGlobe({ onTap, size = 520, controls = true } = {}) {
   }
 
   function spinTo(id, toZoom = zoom) {
-    const [lon, lat] = centreOf(id);
+    const [lon, lat] = Array.isArray(id) ? id : centreOf(id);
     const from = [-rot[0], -rot[1]];
     const interp = geoInterpolate(from, [lon, lat]);
     const z0 = zoom, t0 = performance.now(), ms = 1200;
@@ -258,6 +267,7 @@ export function createGlobe({ onTap, size = 520, controls = true } = {}) {
     mark(id, kind) { if (kind) marks.set(id, kind); else marks.delete(id); draw(); },
     clearMarks() { marks.clear(); draw(); },
     label(id) { labelId = id; draw(); },
+    spot(ll) { spotLL = ll; draw(); },
     autoSpin(on) { spin = on; },
     zoom: setZoom,
     get zoomLevel() { return zoom; },

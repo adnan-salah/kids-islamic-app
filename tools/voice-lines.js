@@ -15,6 +15,7 @@ import { ROOMS } from '../js/games/house.js';
 import { ABC, RHYMES } from '../js/games/sounds.js';
 import { LEVEL1, LEVEL2, LEVEL3 } from '../js/games/world.js';
 import { LETTERS as ABC_CAPS, SHAPE_LIST } from '../js/games/drawing.js';
+import { EXTRA_LINES } from './voice-lines-extra.js';
 
 export function allLines() {
   const L = [];
@@ -108,6 +109,9 @@ export function allLines() {
 
   // Time & Money and Memory Match
   add('What time does the clock show?', 'How much money is this?', 'Find the matching pairs!');
+
+  // New games and question banks (Nov 2026)
+  add(...EXTRA_LINES);
 
   return [...new Set(L)];
 }

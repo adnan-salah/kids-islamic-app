@@ -5,11 +5,13 @@
    Bands:
      little   - easy picture questions, 2 choices.
      explorer - level 2 and some level 3 questions (Year 2-4).
-     champion - level 3 and level 4 questions (Year 4-6).
+     champion - level 4 and level 5 questions (Year 5-6).
+   Each child gets questions they have not seen first (fresh.js).
    In every question, options[0] is the right answer
    (the quiz mixes them up on screen).
    ========================================================= */
 import { shuffle } from '../core.js';
+import { freshPick } from '../fresh.js';
 import { runQuiz, starsFrom } from '../quiz.js';
 
 export const LEVEL1 = [
@@ -48,6 +50,18 @@ export const LEVEL2 = [
   { q: 'What colour do blue and yellow make?', options: ['Green', 'Purple', 'Orange'], pic: '🎨', why: 'Blue and yellow mixed together make green.' },
   { q: 'What is a baby frog called?', options: ['A tadpole', 'A puppy', 'A chick'], pic: '🐸', why: 'Frogs start life as tadpoles in the water.' },
   { q: 'What do plants need to grow?', options: ['Water and sunlight', 'Sand and wind', 'Ice and snow'], pic: '🌱', why: 'Plants need water and sunlight to grow.' },
+  { q: 'Which animal is a mammal?', options: ['Dolphin', 'Shark', 'Octopus'], pic: '🐬', why: 'Dolphins breathe air and feed their babies milk, so they are mammals.' },
+  { q: 'What do caterpillars eat?', options: ['Leaves', 'Rocks', 'Fish'], pic: '🐛', why: 'Caterpillars munch on leaves so they can grow.' },
+  { q: 'Which sense do we use to smell?', options: ['Nose', 'Ears', 'Hands'], pic: '👃', why: 'We smell with our nose.' },
+  { q: 'What is ice made of?', options: ['Frozen water', 'Frozen milk', 'Glass'], pic: '🧊', why: 'Ice is water that has frozen solid.' },
+  { q: 'What does a thermometer measure?', options: ['How hot or cold it is', 'How long something is', 'How heavy something is'], pic: '🌡️', why: 'A thermometer measures temperature.' },
+  { q: 'Which animal can change colour to hide?', options: ['Chameleon', 'Elephant', 'Horse'], pic: '🦎', why: 'Chameleons change colour to blend in.' },
+  { q: 'Where do fish breathe from?', options: ['Gills', 'Lungs', 'Ears'], pic: '🐟', why: 'Fish take oxygen from the water with their gills.' },
+  { q: 'What do seeds grow into?', options: ['Plants', 'Rocks', 'Animals'], pic: '🌱', why: 'A seed grows roots and a shoot, and becomes a plant.' },
+  { q: 'Which season comes after winter?', options: ['Spring', 'Summer', 'Autumn'], pic: '🌸', why: 'Spring comes after winter. Flowers start to bloom.' },
+  { q: 'What helps a magnet stick to the fridge?', options: ['The fridge door has metal', 'Glue', 'The fridge is cold'], pic: '🧲', why: 'Magnets stick to some metals, like steel.' },
+  { q: 'Which baby animal is a joey?', options: ['A baby kangaroo', 'A baby cow', 'A baby duck'], pic: '🦘', why: 'Baby kangaroos are called joeys. They live in their mum\'s pouch.' },
+  { q: 'What protects your brain?', options: ['Your skull', 'Your hair', 'Your skin'], pic: '💀', why: 'Your skull is a strong bone that protects your brain.' },
 ];
 
 export const LEVEL3 = [
@@ -63,6 +77,19 @@ export const LEVEL3 = [
   { q: 'Which state is the Great Barrier Reef in?', options: ['Queensland', 'Tasmania', 'Victoria'], pic: '🐠', why: 'The Great Barrier Reef is off the coast of Queensland.' },
   { q: 'About how many bones does an adult have?', options: ['206', '26', '2,000'], pic: '🦴', why: 'An adult skeleton has 206 bones.' },
   { q: 'What do caterpillars turn into?', options: ['Butterflies', 'Spiders', 'Bees'], pic: '🐛', why: 'A caterpillar makes a cocoon and comes out as a butterfly.' },
+  { q: 'Which part of a plant takes in water from the soil?', options: ['The roots', 'The petals', 'The leaves'], pic: '🌿', why: 'Roots soak up water and hold the plant in the ground.' },
+  { q: 'What is the hottest planet?', options: ['Venus', 'Mercury', 'Mars'], pic: '🔥', why: 'Venus is hottest because its thick clouds trap the heat.' },
+  { q: 'What do we call an animal that eats only plants?', options: ['A herbivore', 'A carnivore', 'An omnivore'], pic: '🦒', why: 'Herbivores, like giraffes, eat only plants.' },
+  { q: 'What do we call an animal that eats only meat?', options: ['A carnivore', 'A herbivore', 'A producer'], pic: '🦁', why: 'Carnivores, like lions, eat meat.' },
+  { q: 'Which of these is a liquid?', options: ['Juice', 'A brick', 'Steam'], pic: '🧃', why: 'Liquids pour and take the shape of their cup.' },
+  { q: 'Which of these is a gas?', options: ['Steam', 'Ice', 'Butter'], pic: '♨️', why: 'Steam is water as a gas.' },
+  { q: 'What makes a shadow?', options: ['Something blocking the light', 'Rain', 'Wind'], pic: '🔦', why: 'When an object blocks light, it makes a dark shadow behind it.' },
+  { q: 'Why do we have seasons?', options: ['The Earth is tilted', 'The Sun gets bigger', 'The Moon gets closer'], pic: '🌏', why: 'The Earth is tilted, so each half gets more sunlight at different times of year.' },
+  { q: 'Which animal is an amphibian?', options: ['Frog', 'Snake', 'Eagle'], pic: '🐸', why: 'Amphibians, like frogs, live both in water and on land.' },
+  { q: 'What does a compass needle point to?', options: ['North', 'The Sun', 'The ground'], pic: '🧭', why: 'A compass needle is a magnet that points north.' },
+  { q: 'Which muscle never stops working?', options: ['Your heart', 'Your leg muscle', 'Your arm muscle'], pic: '❤️', why: 'Your heart is a muscle that beats all day and night.' },
+  { q: 'What is the closest star to Earth?', options: ['The Sun', 'The North Star', 'The Moon'], pic: '☀️', why: 'The Sun is a star, and it is the closest one to us.' },
+  { q: 'Which material is waterproof?', options: ['Plastic', 'Paper', 'Cotton'], pic: '☔', why: 'Water cannot soak through plastic, so it is waterproof.' },
 ];
 
 /* Year 5-6 science for Champions. */
@@ -93,6 +120,34 @@ export const LEVEL4 = [
   { q: 'Which is a fair test? Testing which paper towel soaks up most water by…', options: ['Using the same amount of water each time', 'Using more water for one towel', 'Changing towels and water together'], pic: '🔬', why: 'In a fair test, you only change one thing.' },
 ];
 
+/* More Year 5-6 science for Champions. */
+export const LEVEL5 = [
+  { q: 'What is the centre of an atom called?', options: ['The nucleus', 'The shell', 'The orbit'], pic: '⚛️', why: 'Protons and neutrons sit in the nucleus at the centre of an atom.' },
+  { q: 'Which gas do plants give out that we breathe in?', options: ['Oxygen', 'Carbon dioxide', 'Steam'], pic: '🌳', why: 'Plants give out oxygen when they make their food.' },
+  { q: 'What is a mixture of salt and water called?', options: ['A solution', 'A solid', 'A magnet'], pic: '🧂', why: 'The salt dissolves into the water to make a solution.' },
+  { q: 'How can you get the salt back out of salty water?', options: ['Let the water evaporate', 'Freeze it', 'Shake it'], pic: '☀️', why: 'When the water evaporates, the salt is left behind.' },
+  { q: 'Which change can NOT be reversed?', options: ['Baking a cake', 'Melting ice', 'Freezing juice'], pic: '🎂', why: 'Baking changes the ingredients into something new, so it cannot be undone.' },
+  { q: 'What does a complete circuit need to light a globe?', options: ['A battery, wires and a globe joined in a loop', 'Only a globe', 'A battery and a plastic straw'], pic: '💡', why: 'Electricity flows only when the loop is complete.' },
+  { q: 'Which planet has the biggest rings?', options: ['Saturn', 'Mars', 'Mercury'], pic: '🪐', why: 'Saturn\'s rings are made of ice and rock.' },
+  { q: 'How long does the Moon take to go around the Earth?', options: ['About a month', 'One day', 'One year'], pic: '🌕', why: 'The Moon takes about 27 days to orbit the Earth.' },
+  { q: 'What causes earthquakes?', options: ['Moving plates in the Earth\'s crust', 'Strong winds', 'Heavy rain'], pic: '🌋', why: 'The Earth\'s crust is made of plates that slowly move and sometimes slip.' },
+  { q: 'Which layer of the Earth do we live on?', options: ['The crust', 'The core', 'The mantle'], pic: '🌍', why: 'The crust is the thin rocky outside layer.' },
+  { q: 'What is a group of the same animals living in one place called?', options: ['A population', 'A planet', 'A solution'], pic: '🐧', why: 'For example, all the penguins on one island are a population.' },
+  { q: 'Which organ cleans your blood?', options: ['The kidneys', 'The lungs', 'The stomach'], pic: '🫘', why: 'Your kidneys filter waste out of your blood.' },
+  { q: 'Where does digestion start?', options: ['In your mouth', 'In your feet', 'In your lungs'], pic: '👄', why: 'Chewing and saliva start breaking food down in your mouth.' },
+  { q: 'Which is the best conductor of heat?', options: ['A metal spoon', 'A wooden spoon', 'A plastic spoon'], pic: '🥄', why: 'Metals let heat travel through them quickly.' },
+  { q: 'Why does a metal bridge have small gaps in it?', options: ['Metal expands when it is hot', 'To let rain through', 'To save metal'], pic: '🌉', why: 'Heat makes metal grow a little, so the gaps stop it bending.' },
+  { q: 'What is the name for animals with a backbone?', options: ['Vertebrates', 'Invertebrates', 'Insects'], pic: '🦴', why: 'Fish, birds, reptiles, amphibians and mammals all have backbones.' },
+  { q: 'Which of these is an invertebrate?', options: ['Jellyfish', 'Shark', 'Crocodile'], pic: '🪼', why: 'Jellyfish have no backbone at all.' },
+  { q: 'Light bends when it goes from air into water. This is called…', options: ['Refraction', 'Reflection', 'Evaporation'], pic: '🥤', why: 'That is why a straw looks bent in a glass of water.' },
+  { q: 'Light bouncing off a mirror is called…', options: ['Reflection', 'Refraction', 'Condensation'], pic: '🪞', why: 'Mirrors reflect light, so you can see yourself.' },
+  { q: 'Which part of a flower makes seeds?', options: ['The flower’s ovary, after pollination', 'The roots', 'The stem'], pic: '🌺', why: 'After pollen reaches the flower, seeds form inside it.' },
+  { q: 'Which animals help plants by carrying pollen?', options: ['Bees', 'Worms', 'Fish'], pic: '🐝', why: 'Bees carry pollen from flower to flower.' },
+  { q: 'Which way does water flow in a river?', options: ['Downhill, towards the sea', 'Uphill', 'Round in circles'], pic: '🏞️', why: 'Gravity pulls river water downhill to the sea.' },
+  { q: 'What is the water cycle?', options: ['Water evaporating, forming clouds and falling as rain again', 'Riding a bike in the rain', 'Water staying in one place'], pic: '🌧️', why: 'The same water goes round and round between the sea, the sky and the land.' },
+  { q: 'Which gas makes up most of the air?', options: ['Nitrogen', 'Oxygen', 'Carbon dioxide'], pic: '💨', why: 'About four fifths of the air is nitrogen.' },
+];
+
 const toQuiz = item => {
   const answer = item.options[0];
   return { prompt: item.q, options: item.options, answer, pic: item.pic, explain: item.why, optionClass: item.pic ? '' : 'pic-opt' };
@@ -105,13 +160,15 @@ export default {
   bands: ['little', 'explorer', 'champion'],
 
   start(ctx) {
-    const { root, band } = ctx;
+    const { root, band, child } = ctx;
+    const pickFrom = (key, list, n) => freshPick(child, `world-${key}`, list, n);
     let items;
     // About one year ahead: Explorers get Year 2-3 and some Year 4 science,
     // Champions get Year 4 and Year 5-6 science.
-    if (band === 'little') items = shuffle(LEVEL1).slice(0, 6); // picture answers, as Little Stars can't read yet
-    else if (band === 'explorer') items = shuffle([...shuffle(LEVEL2).slice(0, 6), ...shuffle(LEVEL3).slice(0, 4)]);
-    else items = shuffle([...shuffle(LEVEL3).slice(0, 4), ...shuffle(LEVEL4).slice(0, 8)]);
+    // Explorers and Champions have separate banks, so brothers and sisters get different questions.
+    if (band === 'little') items = pickFrom(1, LEVEL1, 6); // picture answers, as Little Stars can't read yet
+    else if (band === 'explorer') items = shuffle([...pickFrom(2, LEVEL2, 6), ...pickFrom(3, LEVEL3, 4)]);
+    else items = shuffle([...pickFrom(4, LEVEL4, 6), ...pickFrom(5, LEVEL5, 6)]);
     runQuiz(root, items.map(toQuiz), mistakes =>
       ctx.finish(starsFrom(mistakes, band), 'You are a World Explorer!'));
   },
