@@ -14,6 +14,7 @@ import { EASY, HARD as HARD_WORDS, SENTENCES, READING } from '../js/games/words.
 import { ROOMS } from '../js/games/house.js';
 import { ABC, RHYMES } from '../js/games/sounds.js';
 import { LEVEL1, LEVEL2, LEVEL3 } from '../js/games/world.js';
+import { LETTERS as ABC_CAPS, SHAPE_LIST } from '../js/games/drawing.js';
 
 export function allLines() {
   const L = [];
@@ -25,6 +26,13 @@ export function allLines() {
       'MashaAllah!', 'Alhamdulillah!', 'Well done!',
       'You got 3 stars.', 'You got 2 stars.', 'You unlocked a new sticker!');
   add(PRAISE);
+  // Art games: Colour In and Draw & Paint
+  add('Pick a picture to colour!', 'How do you want to colour?', 'Colour by number! Match each number to its colour.',
+      'Tap a colour, then tap the picture.', 'Look at the number, then pick that colour.',
+      'What a beautiful picture!', 'You coloured it all in!',
+      'What do you want to do?', 'Draw anything you like!', 'What a lovely drawing!', 'Super tracing!',
+      SHAPE_LIST.map(s => `Trace the ${s}.`), '0123456789'.split('').map(n => `Trace the number ${n}.`),
+      ABC_CAPS.map(l => `Trace the big letter ${l}.`), ABC_CAPS.map(l => `Trace the small letter ${l.toLowerCase()}.`));
   // Finishing messages from each game
   add('You know how to make wudu!', 'You built the house of Islam!', 'You know your Arabic letters!',
       'You have beautiful manners!', 'You learned 3 duas!', 'You are a maths star!',

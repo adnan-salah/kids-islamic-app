@@ -30,6 +30,8 @@ import globe from './globe-game.js';
 import flags from './flags.js';
 import worldQuiz from './world-quiz.js';
 import grammar from './grammar.js';
+import colouring from './colouring.js';
+import drawing from './drawing.js';
 
 // The My games screen shows one section per subject, in this order.
 export const SUBJECTS = [
@@ -39,6 +41,7 @@ export const SUBJECTS = [
   { id: 'world', name: 'Science & nature', emoji: '🔬', games: [world] },
   { id: 'life', name: 'Life skills', emoji: '🏡', games: [house, manners] },
   { id: 'islam', name: 'Islam', emoji: '🕌', games: [quran, wudu, duas, pillars, stories, letters] },
+  { id: 'art', name: 'Art & colour', emoji: '🎨', games: [colouring, drawing] },
   { id: 'fun', name: 'Puzzles & action', emoji: '🧩', games: [balloons, catchGame, jigsaw, memory] },
 ];
 
