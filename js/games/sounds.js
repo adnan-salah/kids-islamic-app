@@ -4,8 +4,10 @@
    (early reading skills).
    Bands:
      little   - "Which one starts with B?" and "what letter does it start with?" (3 pictures).
-     explorer - (Year 2-3 phonics) sounds like sh, ch, th and ee,
-                counting syllables, and rhyming words.
+     explorer - (made harder 24 Nov 2026: the 6-year-old found it too easy)
+                rhymes spelled differently (eight/gate), the odd one out,
+                same first sound with different letters (fish/phone),
+                silent letters and longer words to clap out. Words only.
    ========================================================= */
 import { shuffle, pick } from '../core.js';
 import { runQuiz, starsFrom } from '../quiz.js';
@@ -94,8 +96,8 @@ function hasSound() {
   };
 }
 
-function syllables() {
-  const [word, n, emoji] = pick(SYLLABLES);
+function syllables(pool = SYLLABLES) {
+  const [word, n, emoji] = pick(pool);
   return {
     prompt: `Clap it out! How many syllables (beats) in “${word}”?`,
     say: `Clap it out! How many beats in ${word}?`,
@@ -105,6 +107,75 @@ function syllables() {
     explain: `${word} has ${n} beat${n > 1 ? 's' : ''}.`,
   };
 }
+
+/* ---------- Explorer (ages 6-7): harder rounds, words only, no picture clues ----------
+   Rhymes that are spelled differently, with look-alike words that do NOT rhyme as the traps.
+   Every prompt and explain line below has a voice clip, so keep the wording exactly as built here. */
+const HARD_RHYMES = [
+  ['eight', 'gate', ['eat', 'egg', 'night']], ['blue', 'shoe', ['blow', 'bull', 'shop']],
+  ['bear', 'chair', ['beard', 'ear', 'bean']], ['night', 'kite', ['nine', 'knit', 'neat']],
+  ['said', 'bed', ['sad', 'paid', 'seed']], ['snow', 'toe', ['now', 'snap', 'cow']],
+  ['fly', 'pie', ['flea', 'fill', 'pin']], ['whale', 'snail', ['wheel', 'wall', 'while']],
+  ['four', 'door', ['fur', 'foot', 'hour']], ['bread', 'head', ['bead', 'break', 'broom']],
+  ['light', 'bite', ['lit', 'late', 'lift']], ['two', 'zoo', ['toe', 'tow', 'twin']],
+  ['rain', 'plane', ['ran', 'ring', 'pan']], ['cheese', 'bees', ['chess', 'chase', 'choose']],
+  ['bone', 'phone', ['one', 'gone', 'done']], ['come', 'drum', ['home', 'comb', 'dome']],
+  ['word', 'bird', ['lord', 'cord', 'ward']],
+];
+// Three words that rhyme and one that only looks like it does.
+const ODD_ONE_OUT = [
+  [['bear', 'chair', 'hair'], 'here'], [['blue', 'shoe', 'two'], 'toe'], [['night', 'kite', 'white'], 'wait'],
+  [['snow', 'toe', 'go'], 'cow'], [['said', 'bed', 'head'], 'bead'], [['rain', 'plane', 'train'], 'ran'],
+  [['four', 'door', 'more'], 'flour'], [['moon', 'spoon', 'June'], 'sun'],
+];
+// Same first sound, different first letters.
+const SAME_START = [
+  ['fish', 'phone', ['pin', 'hat', 'thin']], ['net', 'knee', ['king', 'kite', 'key']],
+  ['rabbit', 'write', ['wet', 'win', 'water']], ['jam', 'giraffe', ['goat', 'game', 'girl']],
+  ['sun', 'city', ['cat', 'cup', 'cake']], ['shoe', 'sugar', ['sock', 'star', 'seed']],
+];
+const SILENT = [['knee', 'K'], ['lamb', 'B'], ['write', 'W'], ['comb', 'B'], ['hour', 'H']];
+const PLAIN = ['dog', 'frog', 'hat', 'jump', 'milk', 'sand', 'drum', 'flag'];
+
+const hardRhyme = ([word, match, traps]) => ({
+  prompt: `Which word rhymes with ${word}?`,
+  pic: word, picClass: 'abc-big word',
+  options: [match, ...traps],
+  answer: match,
+  explain: `${word} and ${match} rhyme!`,
+});
+const oddOneOut = ([trio, odd]) => ({
+  prompt: 'Which word does not rhyme with the others?',
+  options: [...trio, odd],
+  answer: odd,
+  explain: `${odd} does not rhyme with ${trio[0]}, ${trio[1]} and ${trio[2]}.`,
+});
+const sameStart = ([word, match, traps]) => ({
+  prompt: `Which word starts with the same sound as ${word}?`,
+  pic: word, picClass: 'abc-big word',
+  options: [match, ...traps],
+  answer: match,
+  explain: `${match} starts with the same sound as ${word}.`,
+});
+const silentLetter = ([word, letter]) => ({
+  prompt: 'Which word has a silent letter?',
+  options: [word, ...shuffle(PLAIN).slice(0, 3)],
+  answer: word,
+  explain: `The ${letter} in ${word} is silent.`,
+});
+const longSyllables = () => syllables(SYLLABLES.filter(w => w[1] >= 2));
+const some = (list, n) => shuffle(list).slice(0, n);
+const explorerRound = () => shuffle([
+  ...some(HARD_RHYMES, 3).map(hardRhyme),
+  oddOneOut(pick(ODD_ONE_OUT)),
+  ...some(SAME_START, 2).map(sameStart),
+  silentLetter(pick(SILENT)),
+  longSyllables(),
+]);
+// Every spoken line of the harder rounds, for the voice clip list.
+export const EXPLORER_LINES = [
+  ...HARD_RHYMES.map(hardRhyme), ...ODD_ONE_OUT.map(oddOneOut), ...SAME_START.map(sameStart), ...SILENT.map(silentLetter),
+].flatMap(q => [q.prompt, q.explain]);
 
 export default {
   id: 'sounds',
@@ -116,7 +187,7 @@ export default {
     const { root, band } = ctx;
     const questions = band === 'little'
       ? shuffle([startsWith(3), startsWith(3), startsWith(3), startsWith(3), firstLetter(), firstLetter()])
-      : shuffle([hasSound(), hasSound(), hasSound(), syllables(), syllables(), rhyme(), rhyme(), firstLetter()]);
+      : explorerRound();
     runQuiz(root, questions, mistakes =>
       ctx.finish(starsFrom(mistakes, band), 'You know your sounds and rhymes!'));
   },

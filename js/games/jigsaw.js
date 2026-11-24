@@ -67,7 +67,8 @@ export default {
       const cells = Array.from({ length: N * N }, (_, i) => el('div', { class: 'jig-cell', 'data-i': i }));
       const ghostPic = el('div', { class: 'jig-ghost' });
       ghostPic.style.backgroundImage = url;
-      const board = el('div', { class: 'jig-board', style: `grid-template-columns:repeat(${N},1fr)` }, ghostPic, cells);
+      // Only the 3-year-old gets the faint finished picture as a guide. The older children asked for none.
+      const board = el('div', { class: 'jig-board', style: `grid-template-columns:repeat(${N},1fr)` }, band === 'little' ? ghostPic : null, cells);
 
       // The tray: the same pieces, mixed up.
       const pieces = shuffle(cells.map((_, i) => i)).map(i => {
@@ -131,7 +132,7 @@ export default {
       function finish() {
         board.classList.add('complete');
         sfx.win();
-        setTimeout(() => ctx.finish(band === 'little' || mistakes <= 3 ? 3 : 2, 'You finished the puzzle!'), 1800);
+        setTimeout(() => ctx.finish(band === 'little' || mistakes <= N * N ? 3 : 2, /* no guide picture, so some trial and error is fair */ 'You finished the puzzle!'), 1800);
       }
     }
   },

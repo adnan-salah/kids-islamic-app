@@ -1239,3 +1239,5 @@ body[data-band="little"] .done-screen:has(.chest-btn) .row .big-btn .btn-pic { f
 /* After a wrong answer the game stops taking taps for a moment (see MISS_PAUSE_MS in app.js). */
 .stage.miss-pause { pointer-events: none; }
 .stage.miss-pause button:not(.wrong):not(.hint):not(.glow) { opacity: .6; transition: opacity .15s; }
+/* Whole words (not single letters) as the question picture in Sounds & Rhymes. */
+.question-pic.abc-big.word { font-size: 4.5rem; letter-spacing: .1rem; }
