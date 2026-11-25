@@ -5,7 +5,7 @@
    activities; the version (T, A, B, C) follows their age.
    Step 1: the map. The activities come one at a time after this.
    ========================================================= */
-import { el, speak, toast, sfx } from '../../core.js';
+import { el, speak, toast } from '../../core.js';
 import { WOODS_BANDS, woodsBand } from './bands.js';
 
 // shortcut: emoji stand in for the painted animals, replace as each activity is built.
@@ -15,9 +15,14 @@ export const ACTIVITIES = [
   { id: 'bell', title: 'Wake-up Bell', emoji: '🦉', x: 37, y: 20 },
   { id: 'garden', title: 'Water the Garden', emoji: '🌷', x: 63, y: 20 },
   { id: 'stones', title: 'Stepping Stones', emoji: '🦆', x: 88, y: 34 },
-  { id: 'seesaw', title: 'Fair Seesaw', emoji: '🐻', x: 28, y: 76 },
-  { id: 'umbrella', title: 'Hedgehog’s Umbrella', emoji: '🦔', x: 62, y: 78 },
+  { id: 'seesaw', title: 'Fair Seesaw', emoji: '🐻', x: 33, y: 71 },
+  { id: 'umbrella', title: 'Hedgehog’s Umbrella', emoji: '🦔', x: 62, y: 73 },
 ];
+
+// A real recorded pop for tapping a friend (SoundWeaver's pop-bubble, at its recommended volume).
+const popSound = new Audio('audio/sfx/pop-bubble.wav');
+popSound.volume = 0.38;
+const pop = () => { popSound.currentTime = 0; popSound.play().catch(() => {}); };
 
 export default {
   id: 'woods',
@@ -41,8 +46,8 @@ export default {
       el('div', { class: 'woods-map' },
         el('span', { class: 'woods-path' }),
         ACTIVITIES.map(a =>
-          el('button', { class: 'woods-spot', style: `left:${a.x}%;top:${a.y}%`, 'aria-label': `${a.title}, coming soon`,
-            onclick: () => { sfx.tap(); speak([a.title, 'Coming soon!']); toast(words ? `${a.emoji} ${a.title}: coming soon` : `${a.emoji} 🔜`); } },
+          el('button', { class: 'woods-spot', style: `left:${a.x}%;top:${a.y}%`, 'data-state': 'todo', 'aria-label': `${a.title}, coming soon`,
+            onclick: () => { pop(); speak([a.title, 'Coming soon!']); toast(words ? `${a.emoji} ${a.title}: coming soon` : `${a.emoji} 🔜`); } },
             el('span', { class: 'woods-pic' }, a.emoji, el('span', { class: 'woods-need' }, '!')),
             words ? el('span', { class: 'woods-lbl' }, a.title) : null))),
     );

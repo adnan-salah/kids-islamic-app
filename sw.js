@@ -78,6 +78,9 @@ const CORE = [
   'js/games/house.js',
   'js/games/index.js',
   'js/games/jigsaw.js',
+  'js/games/woods/index.js',
+  'js/games/woods/bands.js',
+  'audio/sfx/pop-bubble.wav',
   'js/games/letters.js',
   'js/games/lunchbox.js',
   'js/games/manners.js',
@@ -118,7 +121,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
-  if (/\.(mp3|png|jpe?g|webp|woff2?|ttf)$/i.test(url.pathname)) {
+  if (/\.(mp3|wav|png|jpe?g|webp|woff2?|ttf)$/i.test(url.pathname)) {
     const fresh = () => fetch(req).then(res => {
       if (res.ok && res.status === 200) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;

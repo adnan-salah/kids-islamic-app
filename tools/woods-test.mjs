@@ -1,4 +1,4 @@
-// Checks for Willow Woods's age versions. Run: node tools/spark-test.mjs
+// Checks for the Smartspace age versions. Run: node tools/woods-test.mjs
 import assert from 'node:assert';
 import { ageFrom, woodsBand } from '../js/games/woods/bands.js';
 const now = new Date(2026, 10, 25); // 25 Nov 2026
@@ -11,4 +11,10 @@ assert.equal(woodsBand({ birth: '2019-06', woodsBand: 'A' }, now), 'A'); // pare
 assert.equal(woodsBand({ band: 'little' }, now), 'T');            // no birth date: guess from age group
 assert.equal(ageFrom('2030-01', now), null);                      // future date ignored
 assert.equal(ageFrom('rubbish', now), null);
+assert.equal(woodsBand({ birth: '2021-11' }, now), 'A');          // the month of the 5th birthday
+assert.equal(woodsBand({ band: 'explorer' }, now), 'B');
+assert.equal(woodsBand({ band: 'champion' }, now), 'C');
+assert.equal(woodsBand({ band: 'champion', woodsBand: 'Z' }, now), 'C'); // rubbish override ignored
+assert.equal(woodsBand({ birth: '', band: 'little' }, now), 'T');
+assert.equal(woodsBand({ birth: '2010-01' }, now), 'C');          // older than 11 stays on the top version
 console.log('woods bands ok');

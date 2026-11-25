@@ -189,7 +189,7 @@ function showGames(childId) {
       el('span', { class: 'subject-emoji' }, subject.emoji),
       el('span', { class: 'label' }, subject.name),
       el('span', { class: 'sub' }, subject.sub || `${games.length} game${games.length > 1 ? 's' : ''}`),
-      fresh ? el('span', { class: 'badge-new' }, `${fresh} new`) : null);
+      fresh && !subject.sub ? el('span', { class: 'badge-new' }, `${fresh} new`) : null);
   });
   stagger(cards, 70);
   app.replaceChildren(
@@ -670,7 +670,7 @@ function showParent() {
           if (id === child.band) o.selected = true;
           return o;
         }));
-      band.addEventListener('change', () => { child.band = band.value; saveState(state); });
+      band.addEventListener('change', () => { child.band = band.value; saveState(state); showParent(); });
       const maths = el('select', { 'aria-label': 'Maths level' },
         child.band === 'little' ? [el('option', { value: '1' }, 'Maths: Little Stars')] : Object.entries(MATHS_LEVELS).map(([id, label]) => {
           const o = el('option', { value: id }, `Maths now: ${label}`);
@@ -691,7 +691,7 @@ function showParent() {
       birth.addEventListener('change', () => { child.birth = birth.value; saveState(state); showParent(); });
       woodsSel.addEventListener('change', () => { child.woodsBand = woodsSel.value; saveState(state); });
       return el('div', { class: 'parent-row' },
-        avatarBtn, file, name, band, maths, birth, woodsSel, emojiBtn,
+        avatarBtn, file, name, band, maths, el('label', { class: 'note' }, 'Born ', birth), woodsSel, emojiBtn,
         el('button', { class: 'big-btn small-btn', onclick: () => showProgress(child.id) }, '📊 Progress'),
         el('span', { class: 'note' }, `⭐ ${child.stars} · Level ${levelOf(child.stars)}`));
     })),
