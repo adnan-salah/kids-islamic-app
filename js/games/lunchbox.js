@@ -88,11 +88,18 @@ export default {
           const ok = have(g) >= counts[g];
           return el('li', { class: ok ? 'ok' : '' }, `${ok ? '✅' : '⬜'} ${label}`);
         }));
-        lunch.replaceChildren(...packed.map(f => el('span', { class: 'pop-in' }, f[0])));
+        lunch.replaceChildren(...packed.map(f => el('button', { class: 'pop-in', 'aria-label': `Take out the ${f[1]}`, onclick: () => putBack(f) }, f[0])));
       }
 
+      function putBack(f) { // a full box with something missing used to leave no way on
+        packed.splice(packed.indexOf(f), 1);
+        if (f[2] === 'treat') treats--;
+        const b = shelfEl.children[shelf.indexOf(f)];
+        b.disabled = false; b.classList.remove('taken');
+        sfx.pop(); drawList();
+      }
       function take(f, b) {
-        if (packed.length >= 7) { toast('The lunchbox is full!'); return; }
+        if (packed.length >= 7) { toast('The lunchbox is full! Tap a food in the lunchbox to take it out.', 3500); return; }
         const g = f[2];
         if (g === 'fizzy') {
           mistakes++;

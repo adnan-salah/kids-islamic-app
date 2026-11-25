@@ -983,3 +983,6 @@ function showSplash() {
 }
 
 showSplash();
+
+// Two fingers on the screen must never zoom the app (the 3 year old kept getting stuck zoomed in).
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
