@@ -583,7 +583,7 @@ body[data-bg="world"] { background-image: linear-gradient(#fff3, #fff8), url(../
 body[data-bg="life"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-life.jpg); }
 body[data-bg="islam"] { background-image: linear-gradient(#fff2, #fff7), url(../img/art/bg-islam.jpg); }
 body[data-bg="art"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-art.jpg); }
-body[data-bg="woods"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-world.jpg); }
+body[data-bg="woods"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-woods.jpg); }
 body[data-bg="fun"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-fun.jpg); }
 body[data-bg="none"] { background-image: linear-gradient(160deg, var(--cream), var(--teal-light)); }
 
@@ -1347,4 +1347,6 @@ body.calm :is(.br-scene .glow, .br-tray .glow, .br-go.glow, .br-piece.held) { an
 @keyframes br-bend { 0%, 100% { transform: none; border-radius: .7rem; } 50% { transform: translateY(.9rem) scaleY(.8); border-radius: .7rem .7rem 50% 50%; } }
 @keyframes br-float { to { transform: translate(14rem, 4rem) rotate(40deg); opacity: 0; } }
 .woods-pic img { position: absolute; inset: 11%; width: 78%; height: 78%; object-fit: contain; }
-.br-animals img { height: 1.7em; vertical-align: bottom; }
+.br-animals img, .br-goal img { height: 1.7em; vertical-align: bottom; }
+.br-goal img { height: 1.3em; }
+.br-animals img[alt="bear"] { height: 2.1em; } /* Bear has to look heavy */

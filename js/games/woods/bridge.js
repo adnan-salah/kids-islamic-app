@@ -185,8 +185,8 @@ export function bridge({ root, band, done }) {
           return b;
         }));
       scene.replaceChildren(
-        el('div', { class: 'br-bank left' }, el('span', { class: `br-animals ${p.heavy ? 'three' : ''}` }, p.heavy ? '🐻🦆' : null, el('img', { src: 'img/art/woods-bunny.png', alt: 'Bunny' }))), // shortcut: Bear and Duck are still emoji, swap for the painted art
-        el('div', { class: 'br-bank right' }, el('span', { class: 'br-goal' }, '🥕')),
+        el('div', { class: 'br-bank left' }, el('span', { class: `br-animals ${p.heavy ? 'three' : ''}` }, ...(p.heavy ? ['bear', 'duck'] : []).concat('bunny').map(n => el('img', { src: `img/art/woods-${n}.png`, alt: n })))),
+        el('div', { class: 'br-bank right' }, el('span', { class: 'br-goal' }, el('img', { src: 'img/art/woods-carrots.png', alt: 'Carrots' }))),
         el('div', { class: 'br-water' }, little ? null : Array.from({ length: p.gap }, (_, i) => el('i', {}, String(i + 1)))),
         ...(p.rockCount ? Array.from({ length: p.gap - 1 }, (_, i) => i + 1).filter(n => !rocks.includes(n)).map(n =>
           el('button', { class: `br-rockplace ${glow?.rock === n || held === 'rock' ? 'glow' : ''}`, 'data-at': n, style: `left:${x(n)}px`, 'aria-label': `Put a rock at step ${n}`,

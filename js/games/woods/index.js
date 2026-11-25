@@ -12,15 +12,14 @@ import { bridge } from './bridge.js';
 // The activities that are built. The rest say "coming soon".
 const PLAY = { bridge };
 
-// shortcut: emoji stand in for the painted animals, replace as each activity is built.
 // x, y: the middle of the spot on the map, in percent.
 export const ACTIVITIES = [
   { id: 'bridge', title: 'Bridge for Bunny', emoji: '🐰', pic: 'img/art/woods-bunny.png', x: 12, y: 32 },
-  { id: 'bell', title: 'Wake-up Bell', emoji: '🦉', x: 37, y: 20 },
-  { id: 'garden', title: 'Water the Garden', emoji: '🌷', x: 63, y: 20 },
-  { id: 'stones', title: 'Stepping Stones', emoji: '🦆', x: 88, y: 34 },
-  { id: 'seesaw', title: 'Fair Seesaw', emoji: '🐻', x: 33, y: 71 },
-  { id: 'umbrella', title: 'Hedgehog’s Umbrella', emoji: '🦔', x: 62, y: 73 },
+  { id: 'bell', title: 'Wake-up Bell', emoji: '🦉', pic: 'img/art/woods-owl.png', x: 37, y: 20 },
+  { id: 'garden', title: 'Water the Garden', emoji: '🌷', pic: 'img/art/woods-garden.png', x: 63, y: 20 },
+  { id: 'stones', title: 'Stepping Stones', emoji: '🦆', pic: 'img/art/woods-duck.png', x: 88, y: 34 },
+  { id: 'seesaw', title: 'Fair Seesaw', emoji: '🐻', pic: 'img/art/woods-bear.png', x: 33, y: 71 },
+  { id: 'umbrella', title: 'Hedgehog’s Umbrella', emoji: '🦔', pic: 'img/art/woods-hedgehog.png', x: 62, y: 73 },
 ];
 
 // A real recorded pop for tapping a friend (SoundWeaver's pop-bubble, at its recommended volume).

@@ -42,7 +42,7 @@ import shop from './shop.js';
 // The My games screen shows one section per subject, in this order.
 export const SUBJECTS = [
   // bg: borrows another subject's background picture until Willow Woods has its own art.
-  { id: 'woods', name: 'Salahs’ Smartspace', emoji: '🌳', bg: 'world', sub: '6 friends to help', games: [woods] },
+  { id: 'woods', name: 'Salahs’ Smartspace', emoji: '🌳', sub: '6 friends to help', games: [woods] },
   { id: 'english', name: 'English', emoji: '📚', games: [sounds, words, grammar] },
   { id: 'maths', name: 'Maths', emoji: '🔢', games: [maths, sports, clock] },
   { id: 'geo', name: 'Geography', emoji: '🌍', games: [globe, flags, worldQuiz] },
