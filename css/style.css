@@ -582,6 +582,7 @@ body[data-bg="world"] { background-image: linear-gradient(#fff3, #fff8), url(../
 body[data-bg="life"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-life.jpg); }
 body[data-bg="islam"] { background-image: linear-gradient(#fff2, #fff7), url(../img/art/bg-islam.jpg); }
 body[data-bg="art"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-art.jpg); }
+body[data-bg="woods"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-world.jpg); }
 body[data-bg="fun"] { background-image: linear-gradient(#fff3, #fff8), url(../img/art/bg-fun.jpg); }
 body[data-bg="none"] { background-image: linear-gradient(160deg, var(--cream), var(--teal-light)); }
 
@@ -1086,6 +1087,9 @@ body[data-bg="geo"] { background-image: linear-gradient(#fff3, #fff8), url(../im
   .subject-emoji { width: 4.2rem; height: 4.2rem; font-size: 2.8rem; }
   .subject-card .label { font-size: 1.35rem; line-height: 1.1; white-space: nowrap; }
   .subject-card .sub { font-size: 1rem; }
+  /* Nine cards (with Willow Woods): five across, so it is still two rows. */
+  .subject-grid:has(.subject-card:nth-child(9)) { grid-template-columns: repeat(5, 1fr); gap: .8rem; }
+  .subject-grid:has(.subject-card:nth-child(9)) .label { font-size: 1.2rem; }
   body:has(.subject-grid) .kasem-says .kasem { width: 5.5rem; }
   /* Five or six games: two rows of three, sized to the screen. */
   .tile-grid:has(> :nth-child(5)) { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
@@ -1241,3 +1245,23 @@ body[data-band="little"] .done-screen:has(.chest-btn) .row .big-btn .btn-pic { f
 .stage.miss-pause button:not(.wrong):not(.hint):not(.glow) { opacity: .6; transition: opacity .15s; }
 /* Whole words (not single letters) as the question picture in Sounds & Rhymes. */
 .question-pic.abc-big.word { font-size: 4.5rem; letter-spacing: .1rem; }
+
+/* ---------- Willow Woods: the map ---------- */
+.woods-map { position: relative; flex: 1; width: 100%; min-height: 19rem; }
+.woods-path { position: absolute; inset: 20% 12% 22% 12%; border: .7rem dashed #e7d3a1; border-radius: 50%; }
+.woods-spot {
+  position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0;
+  display: grid; justify-items: center; gap: .3rem; font: inherit; color: inherit; cursor: pointer;
+}
+.woods-spot:active { transform: translate(-50%, -50%) scale(.94); }
+.woods-pic {
+  position: relative; width: clamp(5.5rem, 17dvh, 8rem); aspect-ratio: 1; border-radius: 50%;
+  background: #fff; border: .3rem solid #fff; box-shadow: 0 .4rem 0 #0002;
+  display: grid; place-items: center; font-size: clamp(3rem, 9.5dvh, 4.6rem); line-height: 1;
+}
+.woods-need {
+  position: absolute; right: -.5rem; top: -.5rem; width: 2.3rem; height: 2.3rem; border-radius: 50%;
+  background: #e11d48; color: #fff; display: grid; place-items: center; font-size: 1.4rem; font-weight: 700; border: .2rem solid #fff;
+}
+.woods-lbl { background: #fff; border-radius: 1rem; padding: .1rem .7rem; font-size: 1.1rem; font-weight: 600; white-space: nowrap; }
+.stage[data-woods="T"] .prompt { width: fit-content; } /* no words for the youngest: just the speaker button */

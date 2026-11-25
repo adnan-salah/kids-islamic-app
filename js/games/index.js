@@ -18,6 +18,7 @@ import letters from './letters.js';
 import maths from './maths.js';
 import sports from './sports.js';
 import jigsaw from './jigsaw.js';
+import woods from './woods/index.js';
 import words from './words.js';
 import sounds from './sounds.js';
 import world from './world.js';
@@ -40,6 +41,8 @@ import shop from './shop.js';
 
 // The My games screen shows one section per subject, in this order.
 export const SUBJECTS = [
+  // bg: borrows another subject's background picture until Willow Woods has its own art.
+  { id: 'woods', name: 'Willow Woods', emoji: '🌳', bg: 'world', sub: '6 friends to help', games: [woods] },
   { id: 'english', name: 'English', emoji: '📚', games: [sounds, words, grammar] },
   { id: 'maths', name: 'Maths', emoji: '🔢', games: [maths, sports, clock] },
   { id: 'geo', name: 'Geography', emoji: '🌍', games: [globe, flags, worldQuiz] },

@@ -6,6 +6,7 @@
    ========================================================= */
 import { BANDS, loadState, saveState, resetState, speak, stopSpeech, sayFirst, usePraise, sfx, el, pick, toast, englishVoices, voiceSettings, setVoice, NATURAL, askGrownUp, hasPin, setPin, clearPin, pinPad } from './core.js';
 import { GAMES, SUBJECTS } from './games/index.js';
+import { WOODS_BANDS, woodsBand } from './games/woods/bands.js';
 import { kasem, kasemSays, buddy, confetti, recordPlay, streakOf, gamesToday, chestReady, chestOpenedToday, openChest, GAMES_FOR_CHEST, CHEST_STARS, TREASURES } from './fun.js';
 import { mathsLevelOf, MATHS_LEVELS } from './games/maths.js';
 import { trackGame, totals, daysAgo, today, missedSince } from './stats.js';
@@ -183,11 +184,11 @@ function showGames(childId) {
   const cards = subjects.map(subject => {
     const games = subject.games.filter(g => g.bands.includes(child.band));
     const fresh = games.filter(g => !child.played[g.id]).length;
-    return el('button', { class: `subject-card pop-in s-${subject.id}`, onclick: () => { sfx.tap(); showSubject(childId, subject.id); } },
-      el('span', { class: 'subject-pic', style: `background-image:url(img/thumb/bg-${subject.id}.jpg)` }),
+    return el('button', { class: `subject-card pop-in s-${subject.id}`, onclick: () => { sfx.tap(); games.length === 1 && subject.games.length === 1 ? playGame(childId, games[0].id) : showSubject(childId, subject.id); } },
+      el('span', { class: 'subject-pic', style: `background-image:url(img/thumb/bg-${subject.bg || subject.id}.jpg)` }),
       el('span', { class: 'subject-emoji' }, subject.emoji),
       el('span', { class: 'label' }, subject.name),
-      el('span', { class: 'sub' }, `${games.length} game${games.length > 1 ? 's' : ''}`),
+      el('span', { class: 'sub' }, subject.sub || `${games.length} game${games.length > 1 ? 's' : ''}`),
       fresh ? el('span', { class: 'badge-new' }, `${fresh} new`) : null);
   });
   stagger(cards, 70);
@@ -215,7 +216,9 @@ function keepPlaying(child) {
 function showSubject(childId, subjectId) {
   const child = findChild(childId);
   const subject = SUBJECTS.find(s => s.id === subjectId);
-  setBg(subject.id);
+  // A subject that is one game (Willow Woods) has no list to pick from.
+  if (subject.games.length === 1) return showGames(childId);
+  setBg(subject.bg || subject.id);
   const games = subject.games.filter(g => g.bands.includes(child.band));
   const tiles = games.map(game =>
     el('button', { class: `tile pop-in ${child.played[game.id] ? '' : 'is-new'}`, onclick: () => { sfx.tap(); playGame(childId, game.id); } },
@@ -387,7 +390,7 @@ function playGame(childId, gameId) {
   const subject = subjectOf(gameId);
   child.recent = [gameId, ...(child.recent || []).filter(id => id !== gameId)].slice(0, 2);
   saveState(state);
-  setBg(subject.id);
+  setBg(subject.bg || subject.id);
   usePraise(subject.id === 'islam');
   const root = el('div', { class: 'stage' });
   document.body.dataset.band = child.band;
@@ -676,8 +679,19 @@ function showParent() {
         }));
       if (child.band === 'little') maths.disabled = true;
       maths.addEventListener('change', () => { child.mathsLevel = +maths.value; child.mathsTrend = 0; saveState(state); });
+      // Birth month and year: Willow Woods works out the child's version from it, so they move up as they grow.
+      const birth = el('input', { type: 'month', value: child.birth || '', max: new Date().toISOString().slice(0, 7), 'aria-label': 'Birth month and year' });
+      const woodsSel = el('select', { 'aria-label': 'Willow Woods version' },
+        el('option', { value: '' }, `Willow Woods: by age (${WOODS_BANDS[woodsBand({ ...child, woodsBand: '' })].name})`),
+        Object.entries(WOODS_BANDS).map(([id, b]) => {
+          const o = el('option', { value: id }, `Willow Woods: ${b.name}`);
+          if (id === child.woodsBand) o.selected = true;
+          return o;
+        }));
+      birth.addEventListener('change', () => { child.birth = birth.value; saveState(state); showParent(); });
+      woodsSel.addEventListener('change', () => { child.woodsBand = woodsSel.value; saveState(state); });
       return el('div', { class: 'parent-row' },
-        avatarBtn, file, name, band, maths, emojiBtn,
+        avatarBtn, file, name, band, maths, birth, woodsSel, emojiBtn,
         el('button', { class: 'big-btn small-btn', onclick: () => showProgress(child.id) }, '📊 Progress'),
         el('span', { class: 'note' }, `⭐ ${child.stars} · Level ${levelOf(child.stars)}`));
     })),
