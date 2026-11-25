@@ -1278,3 +1278,71 @@ body[data-band="little"] .done-screen:has(.chest-btn) .row .big-btn .btn-pic { f
 @media (prefers-reduced-motion: reduce) { .woods-need { animation: none !important; } }
 body.calm .woods-need { animation: none !important; }
 @media (orientation: portrait) { .subject-grid:has(.subject-card:nth-child(9)) { grid-template-columns: repeat(3, 1fr); } }
+
+.woods-stars { display: block; font-size: .9rem; letter-spacing: .1rem; }
+
+/* ---------- Smartspace: Bridge for Bunny ---------- */
+.br-tray {
+  display: flex; align-items: center; gap: .2rem 1rem; min-height: 4.6rem;
+  background: #ffffffd9; border-radius: 1.6rem; padding: .2rem 1.2rem; box-shadow: var(--shadow);
+}
+.br-piece { background: none; border: 0; padding: .7rem .2rem; border-radius: 1rem; cursor: grab; touch-action: none; font: inherit; }
+.br-piece.held, .br-piece.glow, .br-span.glow, .br-rockplace.glow, .br-go.glow { outline: 6px solid var(--gold); outline-offset: 2px; box-shadow: 0 0 0 2px #78350f; animation: pulse 1.2s ease-in-out infinite; }
+.br-piece:focus-visible, .br-span:focus-visible, .br-rockplace:focus-visible, .br-rock:focus-visible { outline: 5px solid var(--gold); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .br-scene .glow, .br-tray .glow, .br-go.glow, .br-piece.held { animation: none !important; } }
+body.calm :is(.br-scene .glow, .br-tray .glow, .br-go.glow, .br-piece.held) { animation: none !important; }
+.stage[data-bridge] .prompt p { text-wrap: balance; }
+.br-piece.dragging { position: relative; z-index: 5; pointer-events: none; animation: none; }
+.br-plank {
+  display: grid; place-items: center; height: 2.6rem; border-radius: .7rem; border: 3px solid #8a5a2b; box-shadow: 0 5px 0 #0003;
+  background: repeating-linear-gradient(90deg, #c98b4a 0 calc(var(--u) - 4px), #6b4423 calc(var(--u) - 4px) var(--u));
+  color: #fff; font-size: 1.2rem; white-space: nowrap; pointer-events: none; flex: none;
+}
+.br-plank b { background: #0006; border-radius: 1rem; padding: 0 .6rem; }
+.br-plank.strong { border-color: #3e2c1a; box-shadow: 0 5px 0 #0003, inset 0 0 0 3px #e5e7eb; background: repeating-linear-gradient(90deg, #7b5a3a 0 calc(var(--u) - 4px), #4a3520 calc(var(--u) - 4px) var(--u)); }
+.br-plank.leaf { background: none; border: 0; box-shadow: none; font-size: 3rem; }
+.stage[data-bridge="T"] .br-plank { height: 4rem; border-radius: 2rem; }
+.br-rockpic, .br-rock { display: block; width: 3.6rem; height: 2.8rem; border-radius: 50% 50% 40% 40%; background: #9ca3af; border: 4px solid #6b7280; }
+.br-scene { position: relative; flex: 1; min-height: 9.5rem; overflow: hidden; border-radius: 0 0 1.6rem 1.6rem; }
+.br-bank { position: absolute; top: 50%; bottom: 0; width: var(--bank); background: #7cc56a; border-top: .7rem solid #5aa84c; }
+.br-bank.left { left: 0; border-radius: 0 1rem 0 0; }
+.br-bank.right { right: 0; border-radius: 1rem 0 0 0; }
+.br-animals, .br-goal { position: absolute; bottom: 100%; font-size: clamp(3rem, 9dvh, 4.5rem); line-height: 1.2; white-space: nowrap; }
+.br-animals { right: .6rem; transition: transform 1.6s ease-in-out; }
+.br-goal { left: 1rem; }
+.br-animals.three { font-size: clamp(2.4rem, 7dvh, 3.4rem); }
+.br-water {
+  position: absolute; left: var(--bank); right: var(--bank); top: 58%; bottom: 0; display: flex;
+  background: repeating-linear-gradient(170deg, #5cc3ea 0 40px, #7ad1f0 40px 80px);
+}
+.br-water i { flex: 1; text-align: center; font-style: normal; font-size: 1.3rem; font-weight: 700; color: #0c4a6e; border-left: 2px dashed #fff8; padding-top: .3rem; }
+.br-water i:first-child { border-left: 0; }
+.br-span {
+  position: absolute; top: calc(50% - 3.2rem); height: 3.2rem; padding: 0; border: 4px dashed #0f766e; border-radius: .9rem;
+  background: #ffffffb3; display: flex; align-items: center; cursor: pointer; font: inherit;
+}
+.br-span:has(.br-plank) { border-color: transparent; background: none; }
+.stage[data-bridge="T"] .br-span { top: calc(50% - 4.6rem); height: 4.6rem; }
+.br-rock { position: absolute; top: calc(50% - .2rem); bottom: -1rem; height: auto; translate: -50% 0; padding: 0; border-radius: 1.8rem 1.8rem 0 0; z-index: 1; }
+.br-rockplace {
+  position: absolute; top: 62%; width: min(3.6rem, calc(var(--u) - .5rem)); aspect-ratio: 1; translate: -50% 0; padding: 0; z-index: 2;
+  border: 4px dashed #0c4a6e; border-radius: 50%; background: #ffffff66; cursor: pointer;
+}
+.br-actions { margin-left: auto; display: flex; gap: .6rem; flex: none; }
+.br-actions .big-btn { margin: 0; white-space: nowrap; min-width: 0; padding: .6rem 1.1rem; font-size: 1.35rem; }
+.stage[data-bridge] .prompt { font-size: 1.45rem; padding: .5rem 1.2rem; }
+/* What happens when the child tries the build */
+.br-scene.cross .br-animals { transform: translateX(var(--walk)); }
+.br-scene.cross .br-goal { transform: scale(0); transition: transform .3s 1.5s; }
+.br-span.oops .br-plank { transform-origin: left center; }
+.br-scene[data-oops="short"] .oops .br-plank { animation: br-fall 1.2s ease-in forwards; }
+.br-scene[data-oops="long"] .oops .br-plank { transform-origin: center; animation: br-seesaw .5s ease-in-out 3; }
+.br-scene[data-oops="bend"] .oops .br-plank { animation: br-bend 1.4s ease-in-out; }
+.br-scene[data-oops="leaf"] .oops .br-plank { animation: br-float 1.4s ease-in forwards; }
+.br-scene[data-oops] .br-animals { animation: wiggle .5s ease-in-out 2; }
+@keyframes br-fall { to { transform: translateY(6rem) rotate(25deg); opacity: 0; } }
+@keyframes br-seesaw { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-9deg); } 75% { transform: rotate(9deg); } }
+@keyframes br-bend { 0%, 100% { transform: none; border-radius: .7rem; } 50% { transform: translateY(.9rem) scaleY(.8); border-radius: .7rem .7rem 50% 50%; } }
+@keyframes br-float { to { transform: translate(14rem, 4rem) rotate(40deg); opacity: 0; } }
+.woods-pic img { position: absolute; inset: 11%; width: 78%; height: 78%; object-fit: contain; }
+.br-animals img { height: 1.7em; vertical-align: bottom; }
