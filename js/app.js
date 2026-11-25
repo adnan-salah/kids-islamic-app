@@ -681,10 +681,10 @@ function showParent() {
       maths.addEventListener('change', () => { child.mathsLevel = +maths.value; child.mathsTrend = 0; saveState(state); });
       // Birth month and year: Willow Woods works out the child's version from it, so they move up as they grow.
       const birth = el('input', { type: 'month', value: child.birth || '', max: new Date().toISOString().slice(0, 7), 'aria-label': 'Birth month and year' });
-      const woodsSel = el('select', { 'aria-label': 'Willow Woods version' },
-        el('option', { value: '' }, `Willow Woods: by age (${WOODS_BANDS[woodsBand({ ...child, woodsBand: '' })].name})`),
+      const woodsSel = el('select', { 'aria-label': 'Smartspace version' },
+        el('option', { value: '' }, `Smartspace: by age (${WOODS_BANDS[woodsBand({ ...child, woodsBand: '' })].name})`),
         Object.entries(WOODS_BANDS).map(([id, b]) => {
-          const o = el('option', { value: id }, `Willow Woods: ${b.name}`);
+          const o = el('option', { value: id }, `Smartspace: ${b.name}`);
           if (id === child.woodsBand) o.selected = true;
           return o;
         }));

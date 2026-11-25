@@ -21,7 +21,7 @@ export const ACTIVITIES = [
 
 export default {
   id: 'woods',
-  title: 'Willow Woods',
+  title: 'Salahs’ Smartspace',
   emoji: '🌳',
   bands: ['little', 'explorer', 'champion'],
   noLives: true,  // no lost lives or timers in Willow Woods
@@ -33,7 +33,7 @@ export default {
     const band = woodsBand(child);
     const words = WOODS_BANDS[band].showText !== false; // the youngest version has no words on screen
     root.dataset.woods = band;
-    const line = 'Welcome to Willow Woods! Who shall we help?';
+    const line = 'Welcome to Salahs’ Smartspace! Who shall we help?';
     root.append(
       el('div', { class: 'prompt' },
         el('button', { class: 'icon-btn', 'aria-label': 'Say it again', onclick: () => speak(line) }, '🔊'),
